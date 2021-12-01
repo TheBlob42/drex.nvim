@@ -189,7 +189,7 @@ end
 function M.get_root_path(buffer)
     buffer = buffer or api.nvim_get_current_buf()
     local buf_name = api.nvim_buf_get_name(buffer)
-    return buf_name:match("^drex:(.*)$")
+    return buf_name:match("^drex://(.*)$")
 end
 
 ---Set the given `icon` for the specific `row`

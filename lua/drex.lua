@@ -152,7 +152,7 @@ function M.open_directory_buffer(path)
         return
     end
 
-    local buffer_name = 'drex:' .. path
+    local buffer_name = 'drex://' .. path
     local buffer = vim.fn.bufnr('^' .. buffer_name .. '$')
     -- if a corresponding DREX buffer does not exist yet create one
     if buffer == -1 then
