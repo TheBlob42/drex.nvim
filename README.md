@@ -195,6 +195,10 @@ There is no initial setup needed to use DREX. However you may pass a configurati
     },
     drawer = {
         default_width = 30,
+        window_picker = {
+            enabled = true,
+            labels = 'abcdefghijklmnopqrstuvwxyz',
+        },
     },
     disable_default_keybindings = false,
     keybindings = {
@@ -270,9 +274,17 @@ There is no initial setup needed to use DREX. However you may pass a configurati
 
 ### Drawer
 
-| Option           | Description                             | Default         |
-| ---------------- | ---------------                         | --------------- |
-| `default_width`  | the default width for the drawer window | `30`            |
+| Option           | Description                                            | Default                      |
+| ---------------- | ---------------                                        | ---------------              |
+| `default_width`  | the default width for the drawer window                | `30`                         |
+| `window_picker`  | configuration for the window picker functionality      | -                            |
+| >> `enabled`     | automatically used when opening files from drawer\*    | `true`                       |
+| >> `labels`      | labels used for the window picker (from left to right) | `abcdefghijklmnopqrstuvwxyz` |
+
+\* (otherwise uses `wincmd p`)
+
+![drex window picker example](./assets/window_picker_example.png)
+*window picker in action*
 
 ### Keybindings
 
@@ -372,7 +384,7 @@ DREX is not feature complete as there are still some issues and missing features
 - [ ] VIM doc
 - [ ] Windows support (currently the path separator is hard coded to `/`)
 - [ ] rework the highlighting groups
-- [ ] window picker functionality for opening a file from the drawer window
+- [X] window picker functionality for opening a file from the drawer window
 - [ ] toggle hidden files
 - [ ] rename multiple selected elements at once (similar to [vim-renamer](https://github.com/qpkorr/vim-renamer))
 - [ ] make the clipboard more interactive (e.g. remove single entries from it)
@@ -384,3 +396,8 @@ DREX is not feature complete as there are still some issues and missing features
 > Please also keep in mind that I'm developing this in my free time therefore priorities might change
 
 If you encounter a bug or miss a feature that please open an issue and discuss about it
+
+## Miscellaneous
+
+If you like the `window_picker` functionality from the drawer just have a look at its implementation in `./lua/drex/switch_win.lua`  
+The file is structured so that could easily extract it and use within your own config or plugin with just a few simple modifications
