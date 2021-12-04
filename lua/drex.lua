@@ -466,7 +466,8 @@ end
 
 ---Open the file under the cursor
 ---@param pre string VIM command to execute before opening the file (e.g. to split the window first)
-function M.open_file(pre)
+---@param change_tab boolean Indicator if your `pre` command is switching to another tabpage (skip the drawer special handling if so)
+function M.open_file(pre, change_tab)
     local line = api.nvim_get_current_line()
 
     if utils.is_directory(line) then
@@ -474,24 +475,28 @@ function M.open_file(pre)
         return
     end
 
-    -- if used in drawer, move to the last visited window first
-    -- TODO implement window picker functionality
+    -- if used in drawer, switch to another window first
     local win = api.nvim_get_current_win()
-    if win == require('drex.drawer').get_drawer_window() then
-        vim.cmd('wincmd p')
-
-        -- there are situations in which 'wincmd p' doesn't work
-        -- see: https://github.com/vim/vim/issues/4537
-        if api.nvim_get_current_win() == win then
-            vim.cmd('wincmd l') -- move to the right
-
-            -- in case the drawer window is the last window of the current tabpage
+    if win == require('drex.drawer').get_drawer_window() and not change_tab then
+        if config.drawer.window_picker.enabled then
+            if not require('drex.switch_win').switch_window() then
+                -- user has not chosen a valid window or aborted
+                return
+            end
+        else
+            vim.cmd('wincmd p')
+            -- there are situations in which 'wincmd p' doesn't work
+            -- see: https://github.com/vim/vim/issues/4537
             if api.nvim_get_current_win() == win then
-                vim.cmd('vsplit')
-                require('drex.drawer').set_width(0, true, true)
+                vim.cmd('wincmd l')
             end
         end
 
+        -- in case the drawer window is the last window of the current tabpage
+        if api.nvim_get_current_win() == win then
+            vim.cmd('vsplit')
+            require('drex.drawer').set_width(0, true, true)
+        end
     end
 
     if pre then
