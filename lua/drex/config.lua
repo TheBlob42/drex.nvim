@@ -8,6 +8,10 @@ local default_config = {
     },
     drawer = {
         default_width = 30,
+        window_picker = {
+            enabled = true,
+            labels = 'abcdefghijklmnopqrstuvwxyz',
+        },
     },
     disable_default_keybindings = false,
     keybindings = {
@@ -24,7 +28,7 @@ local default_config = {
             -- open files in separate windows/tabs
             ['<C-v>'] = '<cmd>lua require("drex").open_file("vs")<CR>',
             ['<C-x>'] = '<cmd>lua require("drex").open_file("sp")<CR>',
-            ['<C-t>'] = '<cmd>lua require("drex").open_file("tabnew")<CR>',
+            ['<C-t>'] = '<cmd>lua require("drex").open_file("tabnew", true)<CR>',
             -- switch root directory
             ['<C-l>'] = '<cmd>lua require("drex").open_directory()<CR>',
             ['<C-h>'] = '<cmd>lua require("drex").open_parent_directory()<CR>',
@@ -83,6 +87,26 @@ local function is_invalid_dir_icon(name, value)
     return false
 end
 
+---Helper function to check for supported `window_picker` labels
+---@param labels table List of labels to validate
+---@return boolean
+local function validate_window_picker_labels(labels)
+    local errors = {}
+    local supported_labels = 'abcdefghijklmnopqrstuvwxyz'
+    for c in labels:gmatch('.') do
+        if not supported_labels:find(c) then
+            table.insert(errors, c)
+        end
+    end
+
+    if #errors > 0 then
+        vim.api.nvim_err_writeln('Found invalid characters for `drawer.window_picker.labels`: ' .. table.concat(errors, '') .. ' fall back to default!')
+        return false
+    end
+
+    return true
+end
+
 ---Private table to store custom user functions used in keybindings
 ---Only intended for internal usage within the DREX plugin
 M._fn = {}
@@ -139,6 +163,11 @@ function M.configure(user_config)
     end
     if is_invalid_dir_icon('dir_closed', M.config.icons.dir_closed) then
         M.config.icons.dir_closed = default_config.icons.dir_closed
+    end
+
+    -- check for valid window_picker labels
+    if not validate_window_picker_labels(M.config.drawer.window_picker.labels) then
+        M.config.drawer.window_picker.labels = default_config.drawer.window_picker.labels
     end
 
     -- reset mapped functions
