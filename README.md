@@ -150,7 +150,7 @@ The default keybindings:
 - `<C-v>` open a file in a vertical split¹
 - `<C-x>` open a file in a horizontal split¹
 - `<C-t>` open a file in a new tab
-- `<F5>` reload the current directory (dependant on your cursor position)
+- `<F5>` reload the current directory (dependent on your cursor position)
 - `<C-h>` open a new DREX buffer in the parent directory of the current root path
 - `<C-l>` open the directory under the cursor (the parent directory if the element is a file) in a new DREX buffer
 - `gj` jump to the next sibling
@@ -172,7 +172,7 @@ The default keybindings:
 - `P` move the files and directories from their current location to the path under the cursor
 - `r` rename the element under the cursor
   - you can also use this to move an element to another location
-  - you can create multiple new directories during renaming<br>(e.g. `foo/bar/blob` will create `foor` and `bar` if they don't exist and rename the element to `blob`)
+  - you can create multiple new directories during renaming<br>(e.g. `foo/bar/blob` will create `foo` and `bar` if they don't exist and rename the element to `blob`)
 - `y` copy the name of the element under the cursor³
 - `Y` copy the relative path of the element under the cursor (including the elements name)³
 - `<C-y>` copy the absolute path of the element under the cursor (including the elements name)³
@@ -395,7 +395,7 @@ DREX is not feature complete as there are still some issues and missing features
 > Note that these are ideas from the top of my heads and are subject to change  
 > Please also keep in mind that I'm developing this in my free time therefore priorities might change
 
-If you encounter a bug or miss a feature that please open an issue and discuss about it
+If you encounter a bug or miss a feature please open an issue and lets discuss about it
 
 ## Miscellaneous
 
