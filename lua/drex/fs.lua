@@ -107,7 +107,6 @@ function M.watch_directory(buffer, path)
     -- if a connection is already registered for path, just add the new buffer
     if connections[path] then
         connections._add_buffer(path, buffer)
-        -- TODO this should work, but better check
         return
     end
 
@@ -123,7 +122,7 @@ function M.watch_directory(buffer, path)
 
     local event_callback = vim.schedule_wrap(function(error, _, event)
         if error then
-            api.nvim_err_writeln(error)
+            -- todo? log into some debug file
             return
         end
 
@@ -140,7 +139,7 @@ function M.watch_directory(buffer, path)
         -- a 'rename' event is also send if a directory was deleted
         if not luv.fs_access(path, 'r') then
             -- reload all buffers that displayed `path` (all "parents")
-            local parent_path = vim.fn.fnamemodify(path, ':h:h') .. '/'
+            local parent_path = vim.fn.fnamemodify(path, ':h:h') .. utils.path_separator
 
             for buf, _ in pairs(connections[path].buffers) do
                 if utils.get_root_path(buf) == path then
@@ -226,7 +225,7 @@ function M.scan_directory(path, root_path)
     local indentation = '  '
     if root_path and path ~= root_path then
         local relative_path = path:gsub('^' .. utils.escape(root_path), '')
-        local _, count = relative_path:gsub('/', '')
+        local _, count = relative_path:gsub(utils.path_separator, '')
         indentation = indentation .. string.rep('  ', count)
     end
 
@@ -243,7 +242,7 @@ function M.scan_directory(path, root_path)
             icon = icons.get_icon(name, vim.fn.fnamemodify(name, ':e'), { default = true })
         end
 
-        table.insert(content, indentation .. icon .. path .. name)
+        table.insert(content, indentation .. icon .. ' ' .. path .. name)
     end
 
     -- TODO implement custom sorting

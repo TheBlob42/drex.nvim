@@ -65,10 +65,10 @@ local function expand_path(buffer, path)
     local path_elements
     local target_item
     -- if path ends with a path separator it marks a directory
-    if utils.ends_with(path, '/') then
+    if utils.ends_with(path, utils.path_separator) then
         -- remove root_path and trailing path separator
         local relative_path = path:sub(#root_path + 1, -2)
-        path_elements = vim.split(relative_path, '/')
+        path_elements = vim.split(relative_path, utils.path_separator)
 
         -- last path element is the target
         -- remove it afterwards from the list
@@ -80,9 +80,9 @@ local function expand_path(buffer, path)
             path_elements = { '' }
         end
     else
-        local relative_path = path:match('^' .. utils.escape(root_path) .. '(.*)/.*$') or ''
-        path_elements = vim.split(relative_path, '/')
-        target_item = path:match('^.*/(.+)$')
+        local relative_path = path:match('^'..utils.escape(root_path)..'(.*)'..utils.path_separator..'.*$') or ''
+        path_elements = vim.split(relative_path, utils.path_separator)
+        target_item = path:match('^.*'..utils.path_separator..'(.+)$')
     end
 
     local row = 0
@@ -100,7 +100,7 @@ local function expand_path(buffer, path)
                     path_index = path_index + 1
 
                     if path_index <= #path_elements then
-                        next_path = next_path .. '/' .. path_elements[path_index]
+                        next_path = next_path .. utils.path_separator .. path_elements[path_index]
                     end
                 end
             end
@@ -123,7 +123,7 @@ end
 function M.on_enter()
     vim.opt_local.wrap = false          -- wrap and conceal don't play well together
     vim.opt_local.cursorline = true     -- make the selected line better visible
-    vim.opt_local.conceallevel = 2      -- replace full path with a space
+    vim.opt_local.conceallevel = 3      -- hide full path completely
     vim.opt_local.concealcursor = 'nvc' -- don't reveal full path on cursor
 
     if config.on_enter then
@@ -217,7 +217,7 @@ function M.expand_element(buffer, row)
     end
 
     if utils.is_closed_directory(line) then
-        local path = utils.get_element(line) .. '/'
+        local path = utils.get_element(line) .. utils.path_separator
 
         local sub_dir_content = fs.scan_directory(path, utils.get_root_path(buffer))
         -- if something goes wrong while extracting the directory content --> abort
@@ -263,7 +263,7 @@ function M.collapse_directory(buffer, row)
     local path
     if utils.is_open_directory(line) then
         start_row = row
-        path = utils.get_element(line) .. '/'
+        path = utils.get_element(line) .. utils.path_separator
     else
         path = utils.get_path(line)
     end
@@ -358,7 +358,7 @@ function M.reload_directory(buffer, path)
     end
 
     for row, line in ipairs(buffer_lines) do
-        if not start_row and (utils.get_element(line) .. '/') == path then
+        if not start_row and (utils.get_element(line) .. utils.path_separator) == path then
             start_row = row
         elseif start_row then
             local line_path = utils.get_path(line)
@@ -444,7 +444,7 @@ function M.open_parent_directory()
     utils.check_if_drex_buffer(api.nvim_get_current_buf())
 
     local root_path = utils.get_root_path(0)
-    local parent_path = vim.fn.fnamemodify(root_path, ':h:h') .. '/'
+    local parent_path = vim.fn.fnamemodify(root_path, ':h:h') .. utils.path_separator
     M.open_directory_buffer(parent_path)
     M.focus_element(0, root_path)
 end
@@ -457,7 +457,7 @@ function M.open_directory()
     local path
     local line = api.nvim_get_current_line()
     if utils.is_directory(line) then
-        path = utils.get_element(line) .. '/'
+        path = utils.get_element(line) .. utils.path_separator
     else
         path = utils.get_path(line)
     end

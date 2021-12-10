@@ -81,7 +81,7 @@ local function get_destination_path()
 
     if utils.is_directory(line) then
         local same_level_path = utils.get_path(line)
-        local inside_path     = utils.get_element(line) .. '/'
+        local inside_path     = utils.get_element(line) .. utils.path_separator
 
         local target = vim.fn.inputlist({
             'Please choose the specific destination:',
@@ -129,8 +129,8 @@ local function copy(source, destination)
             break
         end
 
-        local src_path  = source .. '/' .. name
-        local dest_path = destination .. '/' .. name
+        local src_path  = source .. utils.path_separator .. name
+        local dest_path = destination .. utils.path_separator .. name
         copy(src_path, dest_path)
     end
 end
@@ -177,7 +177,8 @@ local function paste(move)
     end
 
     for _, element in ipairs(elements) do
-        local new_element = dest_path .. utils.get_name(element)
+        local name = element:match('.*'..utils.path_separator..'(.*)$')
+        local new_element = dest_path .. name
 
         ::rename_check::
         -- check if the an element with the same name already exists
@@ -227,15 +228,16 @@ end
 ---@param path string The path to create directories for (absolute path)
 ---@return table
 local function create_directories(path)
-    local path_segments = vim.split(path, '/')
+    local path_segments = vim.split(path, utils.path_separator)
 
-    -- if path does not start with '/' it is not absolute
-    if path_segments[1] ~= "" then
-        utils.echo('Invalid path: ' .. path .. '!', 'ErrorMsg')
+    -- if path does not start with '/' or 'C:\' it is not absolute
+    if not (path_segments[1] == "" or path_segments[1]:find('[a-zA-Z]:')) then
+        -- todo? log into some debug file
         return
     end
 
-    -- remove first "" (empty) entry
+    local tmp_path = path_segments[1]
+    -- remove first "" or "C:" entry
     table.remove(path_segments, 1)
     -- remove "" or the file name from the end of the list
     table.remove(path_segments, #path_segments)
@@ -243,11 +245,10 @@ local function create_directories(path)
     local existing_path -- part of `path` which does already exist
     local created_path  -- part of `path` which was created
 
-    local tmp_path = ''
     for _, segment in ipairs(path_segments) do
-        local parent_path = tmp_path .. '/'
+        local parent_path = tmp_path .. utils.path_separator
 
-        tmp_path = tmp_path .. '/' .. segment
+        tmp_path = tmp_path .. utils.path_separator .. segment
         local success = luv.fs_mkdir(tmp_path, 493)
 
         -- the first nonexistent part of `path` was created
@@ -259,7 +260,7 @@ local function create_directories(path)
 
     -- no directory needed to be created
     if not existing_path then
-        existing_path = tmp_path .. '/'
+        existing_path = tmp_path .. utils.path_separator
     end
 
     return { existing_path, created_path }
@@ -282,7 +283,7 @@ local function delete_directory(path)
             break
         end
 
-        local new_path = path .. '/' .. name
+        local new_path = path .. utils.path_separator .. name
         if type == 'directory' then
             error = delete_directory(new_path)
         else
@@ -429,7 +430,7 @@ function M.rename()
         local focus_fn = function() require('drex').focus_element(window, new_element) end
 
         if not fs.post_next_reload(
-            vim.fn.fnamemodify(new_element, ':h') .. '/',
+            vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
             api.nvim_get_current_buf(),
             focus_fn)
         then
@@ -456,7 +457,7 @@ function M.create()
     local existing_base_path = create_directories(new_element)[1]
 
     -- check if only directories should be created
-    if not utils.ends_with(new_element, '/') then
+    if not utils.ends_with(new_element, utils.path_separator) then
         -- check if a file with this name already exists
         if luv.fs_stat(new_element) then
             local action = vim.fn.confirm(new_element .. ' already exists. Overwrite?', '&Yes\n&No', 2)

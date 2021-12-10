@@ -57,64 +57,78 @@ end
 -- ### line utility
 -- ###############################################
 
+-- should be '/' for linux/osx or '\' for windows
+M.path_separator = package.config:sub(1, 1)
+
+-- group 1: indentation
+-- group 2: icon
+-- group 3: element (path + name)
+-- group 4: path
+-- group 5: name
+local line_pattern = string.gsub('^(%s*)([^%s/]+) ((.*/)(.*))$', '/', M.path_separator)
+
 ---Extract the file/directory icon from a `line`
 ---
 ---Examples:
 ---<pre>
----| Input                         | Output |
----|-------------------------------|--------|
----| " +/home/user"                | "+"    |
----| "   ·/home/user/example.json" | "·"    |
+---| Input                          | Output |
+---|--------------------------------|--------|
+---| " + /home/user"                | "+"    |
+---| "   · /home/user/example.json" | "·"    |
 ---</pre>
 ---@param line string The line string to operate on
 ---@return string
 function M.get_icon(line)
-    return line:match("^%s*([^/]+)/.*$")
+    local _, icon = line:match(line_pattern)
+    return icon
 end
 
 ---Extract the elements path from a `line`
 ---
 ---Examples:
 ---<pre>
----| Input                         | Output        |
----|-------------------------------|---------------|
----| " +/home/user"                | "/home/"      |
----| "   ·/home/user/example.json" | "/home/user/" |
+---| Input                          | Output        |
+---|--------------------------------|---------------|
+---| " + /home/user"                | "/home/"      |
+---| "   · /home/user/example.json" | "/home/user/" |
 ---</pre>
 ---@param line string The line string to operate on
 ---@return string
 function M.get_path(line)
-    return line:match("^%s*[^/]+(/.*/).*$")
+    local _, _, _, path = line:match(line_pattern)
+    return path
 end
 
 ---Extract the elements name from a `line`
 ---
 ---Examples:
 ---<pre>
----| Input                         | Output         |
----|-------------------------------|----------------|
----| " +/home/user"                | "user"         |
----| "   ·/home/user/example.json" | "example.json" |
+---| Input                          | Output         |
+---|--------------------------------|----------------|
+---| " + /home/user"                | "user"         |
+---| "   · /home/user/example.json" | "example.json" |
 ---</pre>
 ---@param line string The line string to operate on
 ---@return string
 function M.get_name(line)
-    return line:match("^%s*[^/]*/.*/(.*)$")
+    local _, _, _, _, name = line:match(line_pattern)
+    return name
 end
 
 ---Extract the complete element from a `line`
 ---
 ---Examples:
 ---<pre>
----| Input                         | Output                    |
----|-------------------------------|---------------------------|
----| " +/home/user"                | "/home/user"              |
----| "   ·/home/user/example.json" | "/home/user/example.json" |
+---| Input                          | Output                    |
+---|--------------------------------|---------------------------|
+---| " + /home/user"                | "/home/user"              |
+---| "   · /home/user/example.json" | "/home/user/example.json" |
 ---</pre>
 ---@param line string The line string to operate on
 ---@return string
 function M.get_element(line)
-    return line:match("^%s*[^/]+(/.*)$", 1)
+    local _, _, element = line:match(line_pattern)
+    return element
 end
 
 ---Checks the configured directory icons to see if the element on `line` is a directory
@@ -149,9 +163,8 @@ end
 ---@param line string The line to operate on
 ---@return number
 function M.get_visible_width(line)
-    local indentation = #line:match('^(%s*[^/]*)/.*$')
-    local element = #M.get_name(line)
-    return indentation + element
+    local indentation, icon, _, _, name = line:match(line_pattern)
+    return #indentation + #icon + 1 + #name -- one space between icon and element
 end
 
 -- ###############################################
@@ -201,11 +214,9 @@ function M.set_icon(icon, row, buffer)
     buffer = buffer or api.nvim_get_current_buf()
 
     local line = api.nvim_buf_get_lines(buffer, row - 1, row, false)[1]
-    -- icons might use more than one character
-    local icon_start = #line:match('^(%s*)[^/]*/.*$')
-    local icon_end = #line:match('^(%s*[^/]*)/.*$')
+    local indentation, old_icon = line:match(line_pattern)
 
-    api.nvim_buf_set_text(buffer, row - 1, 0, row - 1, icon_end, { string.rep(' ', icon_start) .. icon })
+    api.nvim_buf_set_text(buffer, row - 1, 0, row - 1, #indentation + #old_icon, { indentation .. icon })
 end
 
 -- ###############################################
