@@ -382,7 +382,7 @@ If you need help to implement your idea please open an issue
 DREX is not feature complete as there are still some issues and missing features I would like to tackle
 
 - [ ] VIM doc
-- [ ] Windows support (currently the path separator is hard coded to `/`)
+- [X] Windows support
 - [ ] rework the highlighting groups
 - [X] window picker functionality for opening a file from the drawer window
 - [ ] toggle hidden files
