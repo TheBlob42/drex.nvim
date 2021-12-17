@@ -677,7 +677,6 @@ function M.delete(mode)
         if error then
             clear_matches()
             utils.echo('Could not delete ' .. element .. ' (' .. error .. '). Abort!', 'ErrorMsg')
-            -- api.nvim_err_writeln('Could not delete ' .. element .. ' (' .. error .. '). Abort!')
             return false
         end
 
