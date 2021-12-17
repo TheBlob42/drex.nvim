@@ -170,9 +170,10 @@ The default keybindings:
 - `p` copy all files and directories from the clipboard to the path under the cursor
   - this will **not** clear the clipboard, so you can continue pasting those files elsewhere
 - `P` move the files and directories from their current location to the path under the cursor
-- `r` rename the element under the cursor
+- `r` rename the element under the cursor (or the visual selection)
   - you can also use this to move an element to another location
   - you can create multiple new directories during renaming<br>(e.g. `foo/bar/blob` will create `foo` and `bar` if they don't exist and rename the element to `blob`)
+- `R` multi rename all elements which are contained in the clipboard
 - `y` copy the name of the element under the cursor³
 - `Y` copy the relative path of the element under the cursor (including the elements name)³
 - `<C-y>` copy the absolute path of the element under the cursor (including the elements name)³
@@ -233,6 +234,7 @@ There is no initial setup needed to use DREX. However you may pass a configurati
             ['p'] = '<cmd>lua require("drex.actions").copy_and_paste()<CR>',
             ['P'] = '<cmd>lua require("drex.actions").cut_and_move()<CR>',
             ['r'] = '<cmd>lua require("drex.actions").rename()<CR>',
+            ['R'] = '<cmd>lua require("drex.actions").multi_rename("clipboard")<CR>',
             -- add/remove elements from clipboard
             ['M'] = '<cmd>DrexMark<CR>',
             ['u'] = '<cmd>DrexUnmark<CR>',
@@ -247,6 +249,7 @@ There is no initial setup needed to use DREX. However you may pass a configurati
         ['v'] = {
             -- file actions
             ['d'] = ':lua require("drex.actions").delete("visual")<CR>',
+            ['r'] = ':lua require("drex.actions").multi_rename("visual")<CR>',
             -- add/remove elements from clipboard
             ['M'] = ':DrexMark<CR>',
             ['u'] = ':DrexUnmark<CR>',
@@ -386,7 +389,7 @@ DREX is not feature complete as there are still some issues and missing features
 - [ ] rework the highlighting groups
 - [X] window picker functionality for opening a file from the drawer window
 - [ ] toggle hidden files
-- [ ] rename multiple selected elements at once (similar to [vim-renamer](https://github.com/qpkorr/vim-renamer))
+- [X] rename multiple selected elements at once (similar to [vim-renamer](https://github.com/qpkorr/vim-renamer))
 - [ ] make the clipboard more interactive (e.g. remove single entries from it)
 - [ ] optionally integrate with [nui.nvim](https://github.com/MunifTanjim/nui.nvim) 
 - [ ] optionally integrate with [nvim-notify](https://github.com/rcarriga/nvim-notify) 

@@ -5,6 +5,10 @@ local luv = vim.loop
 local utils = require('drex.utils')
 local fs = require('drex.fs')
 
+---Private table to store per buffer functions needed for autocmds or keybindings
+---Only intended for internal usage within the DREX plugin
+M._fn = {}
+
 M.clipboard = {}
 
 -- ####################################
@@ -392,10 +396,142 @@ function M.cut_and_move()
     paste(true)
 end
 
+---Rename `old_element` to `new_element`
+---@param old_element string
+---@param new_element string
+---@return boolean success
+---@return string error
+local function rename_element(old_element, new_element)
+    if old_element == new_element then
+        return false
+    end
+
+    local stats = luv.fs_stat(new_element)
+    if stats then
+        if stats.type == 'directory' then
+            local data, error = luv.fs_scandir(new_element)
+            if error then
+                return false, error
+            end
+
+            local item = luv.fs_scandir_next(data)
+            if item then
+                return false, new_element .. ' is a non-empty directory. You have to manually check this!'
+            end
+        end
+
+        if vim.fn.confirm(new_element .. ' already exists. Overwrite?', '&Yes\n&No', 2) == 1 then
+            return false
+        end
+    end
+
+    create_directories(new_element)
+    local _, error = luv.fs_rename(old_element, new_element)
+
+    if error then
+        return false, error
+    end
+
+    rename_loaded_buffers(old_element, new_element)
+    return true
+end
+
+---Rename multiple elements in a separate buffer
+---- 'clipboard': rename all elements from the DREX clipboard
+---- 'visual': rename all elements in the current visual selection
+---- 'line': (default) rename the element in the current line
+---
+---Some important notes:
+---- The renaming is executed once you close the buffer (you will be asked to confirm)
+---- The renaming happens in the order of the elements within the buffer
+---@param mode string The rename mode to use
+function M.multi_rename(mode)
+    local elements
+
+    if mode == 'clipboard' then
+        elements = get_clipboard_entries('desc')
+        if #elements == 0 then
+            utils.echo('The clipboard is empty! There is nothing to rename...')
+            return
+        end
+    elseif mode == 'visual' then
+        elements = {}
+        local startRow, endRow = visual_selected_rows()
+        for row = startRow, endRow, 1 do
+            table.insert(elements, utils.get_element(vim.fn.getline(row)))
+        end
+        table.sort(elements, function(a, b) return a > b end) -- sort descending
+    else
+        elements = { utils.get_element(api.nvim_get_current_line()) }
+    end
+
+    local buffer = api.nvim_create_buf(false, true)
+    api.nvim_buf_set_lines(buffer, 0, -1, false, elements)
+    api.nvim_buf_set_option(buffer, 'bufhidden', 'delete')
+
+    vim.cmd('below split')
+    api.nvim_set_current_buf(buffer)
+
+    M._fn[buffer] = function()
+        local buf_elements = api.nvim_buf_get_lines(buffer, 0, -1, false)
+        if table.concat(elements) ~= table.concat(buf_elements) then
+            local confirm = vim.fn.confirm('Should your changes be applied?', '&Yes\n&No\n&Diff', 2)
+
+            if confirm == 3 then
+                local diff = {}
+                for index, old_element in ipairs(elements) do
+                    local new_element = buf_elements[index]
+                    if old_element ~= new_element then
+                        table.insert(diff, old_element .. ' --> ' .. new_element)
+                    end
+                end
+
+                -- increase `cmdheight` to prevent "hit enter prompt"
+                local cmd_height = vim.opt.cmdheight:get()
+                if cmd_height < #diff + 1 then
+                    vim.opt.cmdheight = #diff + 1
+                end
+
+                vim.cmd('redraw')
+                utils.echo(table.concat(diff, '\n'), 'WarningMsg')
+                confirm = vim.fn.confirm('Should your changes be applied?', '&Yes\n&No', 2)
+
+                vim.opt.cmdheight = cmd_height
+            end
+
+            if confirm == 1 then
+                for index, old_element in ipairs(elements) do
+                    local new_element = buf_elements[index]
+                    if old_element ~= new_element then
+                        local _, error = rename_element(old_element, new_element)
+                        if error then
+                            utils.echo(error, 'ErrorMsg')
+                            if index < #elements and vim.fn.confirm('Continue?', '&Yes\n&No', 1) ~= 1 then
+                                return
+                            end
+                        elseif mode == 'clipboard' then
+                            M.clipboard[old_element] = nil
+                            M.clipboard[new_element] = true
+                        end
+                    end
+                end
+            end
+        end
+
+        M._fn[buffer] = nil
+    end
+
+    vim.cmd(table.concat({
+        'augroup DrexRenameBuffer',
+            'autocmd! * <buffer>',
+            'autocmd BufUnload <buffer> lua require("drex.actions")._fn['..buffer..']()',
+        'augroup END',
+    }, '\n'))
+end
+
 ---Rename the element under the cursor
 ---The path of the renamed element can be changed and new directories will be created automatically
 function M.rename()
-    -- TODO implement 'multi rename' if the clipboard contains entries or if a visual selection is present
     local old_element = utils.get_element(api.nvim_get_current_line())
     local new_element = vim.fn.input('New name: ', old_element)
 
@@ -404,25 +540,7 @@ function M.rename()
     end
     vim.cmd('redraw') -- clear input area
 
-    local new_element_stats = luv.fs_stat(new_element)
-    local action = 1
-    if new_element_stats then
-        action = vim.fn.confirm(new_element .. ' already exists. Overwrite?', '&Yes\n&No', 2)
-    end
-
-    if action == 1 then
-        create_directories(new_element)
-        local _, error = luv.fs_rename(old_element, new_element)
-
-        if error then
-            utils.echo('Could not rename ' .. old_element .. '(' .. error .. ')', 'ErrorMsg')
-            return
-        end
-    else
-        return
-    end
-
-    rename_loaded_buffers(old_element, new_element)
+    rename_element(old_element, new_element)
 
     -- if the renamed element is in scope of the current DREX buffer, focus it
     if utils.starts_with(new_element, utils.get_root_path(0)) then
