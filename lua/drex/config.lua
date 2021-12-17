@@ -46,6 +46,7 @@ local default_config = {
             ['p'] = '<cmd>lua require("drex.actions").copy_and_paste()<CR>',
             ['P'] = '<cmd>lua require("drex.actions").cut_and_move()<CR>',
             ['r'] = '<cmd>lua require("drex.actions").rename()<CR>',
+            ['R'] = '<cmd>lua require("drex.actions").multi_rename("clipboard")<CR>',
             -- add/remove elements from clipboard
             ['M'] = '<cmd>DrexMark<CR>',
             ['u'] = '<cmd>DrexUnmark<CR>',
@@ -60,6 +61,7 @@ local default_config = {
         ['v'] = {
             -- file actions
             ['d'] = ':lua require("drex.actions").delete("visual")<CR>',
+            ['r'] = ':lua require("drex.actions").multi_rename("visual")<CR>',
             -- add/remove elements from clipboard
             ['M'] = ':DrexMark<CR>',
             ['u'] = ':DrexUnmark<CR>',
