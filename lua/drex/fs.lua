@@ -215,8 +215,8 @@ function M.scan_directory(path, root_path)
         return
     end
 
-    local data, error, _ = luv.fs_scandir(path)
-    if error ~= nil then
+    local data, error = luv.fs_scandir(path)
+    if error then
         print(error)
         return
     end
