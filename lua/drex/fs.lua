@@ -171,6 +171,16 @@ function M.watch_directory(buffer, path)
             end
         end
 
+        -- check clipboard for elements that have been renamed deleted outside of Neovim
+        local clipboard = require('drex.actions').clipboard
+        for element, _ in pairs(clipboard) do
+            if utils.starts_with(element, path) then
+                if not luv.fs_access(element, 'r') then
+                    clipboard[element] = nil
+                end
+            end
+        end
+
         -- if no buffers are connected anymore, remove the whole path
         if vim.tbl_count(connections[path].buffers) == 0 then
             connections._remove_path(path)
