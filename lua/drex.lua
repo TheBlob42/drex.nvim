@@ -161,13 +161,12 @@ function M.open_directory_buffer(path)
         fs.watch_directory(buffer, path)
     end
 
-    -- (re)set some basic buffer options
-    api.nvim_buf_set_option(buffer, 'filetype', 'drex')
-    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
-    api.nvim_buf_set_option(buffer, 'buflisted', true)
-    api.nvim_buf_set_option(buffer, 'modifiable', false)
     -- to make it work with `airblade/vim-rooter`
     api.nvim_buf_set_var(buffer, 'rootDir', path)
+    -- (re)set some basic buffer options
+    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
+    api.nvim_buf_set_option(buffer, 'modifiable', false)
+    api.nvim_buf_set_option(buffer, 'filetype', 'drex')
 
     -- set the buffer to the current window in order to properly load it
     api.nvim_set_current_buf(buffer)
