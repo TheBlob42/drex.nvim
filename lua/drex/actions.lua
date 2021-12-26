@@ -468,6 +468,7 @@ function M.multi_rename(mode)
     local buffer = api.nvim_create_buf(false, true)
     api.nvim_buf_set_lines(buffer, 0, -1, false, elements)
     api.nvim_buf_set_option(buffer, 'bufhidden', 'delete')
+    api.nvim_buf_set_name(buffer, 'DREX Rename')
 
     vim.cmd('below split')
     api.nvim_set_current_buf(buffer)
