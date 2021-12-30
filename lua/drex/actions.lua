@@ -465,17 +465,46 @@ function M.multi_rename(mode)
         elements = { utils.get_element(api.nvim_get_current_line()) }
     end
 
+    local buffer_lines = {
+        "# Confirm changes by leaving this buffer or closing the window and approve the",
+        "# confirmation (only if changes exist). Renaming will be processed line by line",
+        "# from top to bottom. Comment lines starting with '#' will be ignored",
+        unpack(elements)
+    }
+
     local buffer = api.nvim_create_buf(false, true)
-    api.nvim_buf_set_lines(buffer, 0, -1, false, elements)
-    api.nvim_buf_set_option(buffer, 'bufhidden', 'delete')
+    api.nvim_buf_set_lines(buffer, 0, -1, false, buffer_lines)
+    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
+    api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
+    api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit') -- to shade comment lines
     api.nvim_buf_set_name(buffer, 'DREX Rename')
 
     vim.cmd('below split')
     api.nvim_set_current_buf(buffer)
 
+    -- clear buffer local undo history
+    -- local old_undolevels = vim.opt.undolevels:get()
+    -- api.nvim_buf_set_option(buffer, 'undolevels', -1)
+    -- vim.cmd(api.nvim_replace_termcodes('normal a <BS><ESC>', true, true, true))
+    -- api.nvim_buf_set_option(buffer, 'undolevels', old_undolevels)
+
+    -- in current stable version there is a bug so we have to perform this in VIML till 0.7
+    -- see: https://github.com/neovim/neovim/pull/15996
+    vim.cmd [[
+        let old_undolevels = &undolevels
+        set undolevels=-1
+        exe "normal a \<BS>\<ESC>"
+        let &undolevels = old_undolevels
+        unlet old_undolevels
+    ]]
+
     M._fn[buffer] = function()
-        local buf_elements = api.nvim_buf_get_lines(buffer, 0, -1, false)
+        local buf_elements = vim.tbl_filter(
+            function(line) return not utils.starts_with(line, "#") end, -- filter out comment lines
+            api.nvim_buf_get_lines(buffer, 0, -1, false))
+
         if table.concat(elements) ~= table.concat(buf_elements) then
+            vim.cmd('redraw')
             local confirm = vim.fn.confirm('Should your changes be applied?', '&Yes\n&No\n&Diff', 2)
 
             if confirm == 3 then
@@ -500,21 +529,34 @@ function M.multi_rename(mode)
                 vim.opt.cmdheight = cmd_height
             end
 
+            local renamed_counter = 0
+
             if confirm == 1 then
                 for index, old_element in ipairs(elements) do
                     local new_element = buf_elements[index]
                     if old_element ~= new_element then
                         local _, error = rename_element(old_element, new_element)
                         if error then
+                            vim.cmd('redraw')
                             utils.echo(error, 'ErrorMsg')
                             if index < #elements and vim.fn.confirm('Continue?', '&Yes\n&No', 1) ~= 1 then
                                 return
                             end
-                        elseif mode == 'clipboard' then
-                            M.clipboard[old_element] = nil
-                            M.clipboard[new_element] = true
+                        else
+                            renamed_counter = renamed_counter + 1
+
+                            if mode == 'clipboard' then
+                                M.clipboard[old_element] = nil
+                                M.clipboard[new_element] = true
+                            end
                         end
                     end
+                end
+
+                if renamed_counter > 0 then
+                    vim.cmd('redraw')
+                    local msg = 'Renamed ' .. renamed_counter .. ' element' .. (renamed_counter > 1 and 's' or '') .. ' successfully'
+                    utils.echo(msg)
                 end
             end
         end
