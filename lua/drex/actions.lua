@@ -699,20 +699,30 @@ function M.rename()
     end
     vim.cmd('redraw') -- clear input area
 
-    rename_element(old_element, new_element)
+    local success, error = rename_element(old_element, new_element)
 
-    -- if the renamed element is in scope of the current DREX buffer, focus it
-    if utils.starts_with(new_element, utils.get_root_path(0)) then
-        local window = api.nvim_get_current_win()
-        local focus_fn = function() require('drex').focus_element(window, new_element) end
-
-        if not fs.post_next_reload(
-            vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
-            api.nvim_get_current_buf(),
-            focus_fn)
-        then
-            focus_fn()
+    if success then
+        if M.clipboard[old_element] then
+            M.clipboard[old_element] = nil
+            M.clipboard[new_element] = true
+            reload_drex_syntax()
         end
+
+        -- if the renamed element is in scope of the current DREX buffer, focus it
+        if utils.starts_with(new_element, utils.get_root_path(0)) then
+            local window = api.nvim_get_current_win()
+            local focus_fn = function() require('drex').focus_element(window, new_element) end
+
+            if not fs.post_next_reload(
+                vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
+                api.nvim_get_current_buf(),
+                focus_fn)
+            then
+                focus_fn()
+            end
+        end
+    else
+        utils.echo(error, 'ErrorMsg')
     end
 end
 
