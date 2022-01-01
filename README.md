@@ -390,7 +390,7 @@ DREX is not feature complete as there are still some issues and missing features
 - [X] window picker functionality for opening a file from the drawer window
 - [ ] toggle hidden files
 - [X] rename multiple selected elements at once (similar to [vim-renamer](https://github.com/qpkorr/vim-renamer))
-- [ ] make the clipboard more interactive (e.g. remove single entries from it)
+- [X] make the clipboard more interactive (e.g. remove single entries from it)
 - [ ] optionally integrate with [nui.nvim](https://github.com/MunifTanjim/nui.nvim) 
 - [ ] optionally integrate with [nvim-notify](https://github.com/rcarriga/nvim-notify) 
 - [ ] ...
