@@ -52,7 +52,7 @@ local default_config = {
             ['u'] = '<cmd>DrexUnmark<CR>',
             ['m'] = '<cmd>DrexToggle<CR>',
             ['cc'] = '<cmd>lua require("drex.actions").clear_clipboard()<CR>',
-            ['cs'] = '<cmd>lua require("drex.actions").print_clipboard()<CR>',
+            ['cs'] = '<cmd>lua require("drex.actions").open_clipboard_window()<CR>',
             -- string copy utilities
             ['y'] = '<cmd>lua require("drex.actions").copy_element_name()<CR>',
             ['Y'] = '<cmd>lua require("drex.actions").copy_element_relative_path()<CR>',

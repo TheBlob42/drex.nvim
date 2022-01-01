@@ -5,9 +5,18 @@ local luv = vim.loop
 local utils = require('drex.utils')
 local fs = require('drex.fs')
 
----Private table to store per buffer functions needed for autocmds or keybindings
----Only intended for internal usage within the DREX plugin
-M._fn = {}
+---Private table to store buffer specific autocommand functions
+local buffer_autocmds = {}
+
+---Call a buffer specific autocommand function (if there is one)
+---This is only intended for the usage within autocommands
+---@param buffer number Buffer handle
+function M.call_buf_autocmd(buffer)
+    local fn = buffer_autocmds[buffer]
+    if fn then
+        fn()
+    end
+end
 
 M.clipboard = {}
 
@@ -53,6 +62,16 @@ local function get_clipboard_entries(sort_order)
     return clipboard_entries
 end
 
+---Reload the syntax option in all currently visible DREX buffer
+local function reload_drex_syntax()
+    for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
+        local buffer = api.nvim_win_get_buf(win)
+        if api.nvim_buf_get_option(buffer, 'filetype') == 'drex' then
+            api.nvim_buf_call(buffer, function() vim.cmd('doautocmd Syntax') end)
+        end
+    end
+end
+
 ---Retrieve the start and end row of the current or last visual selection
 ---@return number
 ---@return number
@@ -66,14 +85,27 @@ local function visual_selected_rows()
     end
 end
 
----Reload the syntax option in all currently visible DREX buffer
-local function reload_drex_syntax()
-    for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-        local buffer = api.nvim_win_get_buf(win)
-        if api.nvim_buf_get_option(buffer, 'filetype') == 'drex' then
-            api.nvim_buf_call(buffer, function() vim.cmd('doautocmd Syntax') end)
-        end
-    end
+---Reset the undo history for `buffer`
+---@param buffer number Buffer handle, or 0 for current buffer
+local function buf_clear_undo_history(buffer)
+    -- local old_undolevels = vim.opt.undolevels:get()
+    -- api.nvim_buf_set_option(buffer, 'undolevels', -1)
+    -- api.nvim_buf_call(buffer, function()
+    --     vim.cmd(api.nvim_replace_termcodes('normal a <BS><ESC>', true, true, true))
+    -- end)
+    -- api.nvim_buf_set_option(buffer, 'undolevels', old_undolevels)
+
+    -- in current stable version there is a bug so we have to perform this in VIML till 0.7
+    -- see: https://github.com/neovim/neovim/pull/15996
+    api.nvim_buf_call(buffer, function()
+        vim.cmd [[
+            let old_undolevels = &undolevels
+            set undolevels=-1
+            exe "normal a \<BS>\<ESC>"
+            let &undolevels = old_undolevels
+            unlet old_undolevels
+        ]]
+    end)
 end
 
 ---Return the path of the current line as destination path
@@ -307,17 +339,116 @@ end
 -- ### clipboard related functions
 -- ####################################
 
----Print the current clipboard content (sorted alphabetically and line by line)
-function M.print_clipboard()
-    local clipboard_entries = get_clipboard_entries('asc')
-    if #clipboard_entries == 0 then
-        utils.echo('DREX clipboard is empty...')
-        return
+---Edit all DREX clipboard entries in a floating window
+---Some important notes:
+---- The clipboard is updated once you leave the buffer or close the window
+---- Empty lines and comments (starting with '#') will be ignored
+---- Invalid paths will also be ignored
+function M.open_clipboard_window()
+    local elements = get_clipboard_entries('asc')
+    local buf_lines = {
+        '# DREX CLIPBOARD',
+        '',
+        '# Confirm changes by leaving this buffer or closing the window and approve the',
+        "# confirmation (only if changes exist). Empty lines, comments starting with '#'",
+        '# and non-existing elements will be ignored and not added to the clipboard',
+        '',
+        unpack(elements)
+    }
+
+    local buffer = api.nvim_create_buf(false, true)
+    api.nvim_buf_set_lines(buffer, 0, -1, false, buf_lines)
+    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
+    api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
+    api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit')
+    api.nvim_buf_set_name(buffer, 'DREX Clipboard')
+    buf_clear_undo_history(buffer)
+
+    local vim_width = vim.opt.columns:get()
+    local vim_height = vim.opt.lines:get()
+
+    -- calculate floating window dimensions
+    -- - height: 80% of the Neovim window
+    -- - width:
+    --   - 60% of Neovim window (default)
+    --   - or at least 80 columns
+    --   - or as long as the longest element (if enough space)
+    local win_height = math.floor(vim_height * 0.8)
+    local win_width = math.floor(vim_width * 0.6)
+
+    win_width = win_width < 80 and 80 or win_width
+    local max_element_width = vim.fn.max(vim.tbl_map(function(element) return #element end, elements))
+    if max_element_width > win_width then
+        if max_element_width > vim_width - 10 then
+            win_width = vim_width - 10
+        else
+            win_width = max_element_width
+        end
     end
 
-    for _, entry in ipairs(clipboard_entries) do
-        utils.echo(entry)
+    local x = math.floor((vim_width - win_width) / 2)
+    local y = math.floor((vim_height - win_height) / 2)
+
+    local clipboard_win = api.nvim_open_win(buffer, true, {
+        relative = 'editor',
+        width = win_width,
+        height = win_height,
+        col = x,
+        row = y,
+        style = 'minimal',
+        border = 'rounded',
+        noautocmd = false,
+    })
+    api.nvim_win_set_option(clipboard_win, 'wrap', false)
+
+    buffer_autocmds[buffer] = function()
+        local buf_elements = {}
+
+        for _, element in ipairs(api.nvim_buf_get_lines(buffer, 0, -1, false)) do
+            if element ~= '' and not utils.starts_with(element, '#') then
+                if utils.ends_with(element, utils.path_separator) then
+                    -- remove trailing path separator for directories
+                    element = element:sub(1, #element - 1)
+                end
+
+                if luv.fs_access(element, 'r') then
+                    table.insert(buf_elements, element)
+                end
+            end
+        end
+
+        table.sort(buf_elements)
+
+        if table.concat(elements) ~= table.concat(buf_elements) then
+            vim.cmd('redraw')
+            local apply_changes = vim.fn.confirm('Should your changes be applied?', '&Yes\n&No', 1) == 1
+
+            if apply_changes then
+                local tmp_clipboard = {}
+                for _, element in ipairs(buf_elements) do
+                    tmp_clipboard[element] = true
+                end
+                M.clipboard = tmp_clipboard
+
+                reload_drex_syntax()
+            end
+        end
+
+        vim.schedule(function()
+            if api.nvim_win_is_valid(clipboard_win) then
+                api.nvim_win_close(clipboard_win, true)
+            end
+        end)
+
+        buffer_autocmds[buffer] = nil
     end
+
+    vim.cmd(table.concat({
+        'augroup DrexClipboardBuffer',
+            'autocmd! * <buffer>',
+            'autocmd WinLeave,BufUnload <buffer> lua require("drex.actions").call_buf_autocmd(' .. buffer .. ')',
+        'augroup END',
+    }, '\n'))
 end
 
 ---Clear the clipboard and reload the DREX syntax
@@ -478,27 +609,12 @@ function M.multi_rename(mode)
     api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
     api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit') -- to shade comment lines
     api.nvim_buf_set_name(buffer, 'DREX Rename')
+    buf_clear_undo_history(buffer)
 
     vim.cmd('below split')
     api.nvim_set_current_buf(buffer)
 
-    -- clear buffer local undo history
-    -- local old_undolevels = vim.opt.undolevels:get()
-    -- api.nvim_buf_set_option(buffer, 'undolevels', -1)
-    -- vim.cmd(api.nvim_replace_termcodes('normal a <BS><ESC>', true, true, true))
-    -- api.nvim_buf_set_option(buffer, 'undolevels', old_undolevels)
-
-    -- in current stable version there is a bug so we have to perform this in VIML till 0.7
-    -- see: https://github.com/neovim/neovim/pull/15996
-    vim.cmd [[
-        let old_undolevels = &undolevels
-        set undolevels=-1
-        exe "normal a \<BS>\<ESC>"
-        let &undolevels = old_undolevels
-        unlet old_undolevels
-    ]]
-
-    M._fn[buffer] = function()
+    buffer_autocmds[buffer] = function()
         local buf_elements = vim.tbl_filter(
             function(line) return not utils.starts_with(line, "#") end, -- filter out comment lines
             api.nvim_buf_get_lines(buffer, 0, -1, false))
@@ -561,13 +677,13 @@ function M.multi_rename(mode)
             end
         end
 
-        M._fn[buffer] = nil
+        buffer_autocmds[buffer] = nil
     end
 
     vim.cmd(table.concat({
         'augroup DrexRenameBuffer',
             'autocmd! * <buffer>',
-            'autocmd BufUnload <buffer> lua require("drex.actions")._fn['..buffer..']()',
+            'autocmd BufUnload <buffer> lua require("drex.actions").call_buf_autocmd(' .. buffer .. ')',
         'augroup END',
     }, '\n'))
 end
