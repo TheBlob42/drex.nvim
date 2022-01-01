@@ -160,7 +160,7 @@ The default keybindings:
 - `M` mark the current element (add it to the clipboard)²
 - `u` unmark the current element (remove it from the clipboard)²
 - `cc` clear the clipboard content
-- `cs` show the content of the clipboard
+- `cs` show and edit the content of the clipboard
 - `s` show the stats for the element under the cursor
 - `a` create a new file or directory
   - to add a directory add a `/` at the end of your input
@@ -240,7 +240,7 @@ There is no initial setup needed to use DREX. However you may pass a configurati
             ['u'] = '<cmd>DrexUnmark<CR>',
             ['m'] = '<cmd>DrexToggle<CR>',
             ['cc'] = '<cmd>lua require("drex.actions").clear_clipboard()<CR>',
-            ['cs'] = '<cmd>lua require("drex.actions").print_clipboard()<CR>',
+            ['cs'] = '<cmd>lua require("drex.actions").open_clipboard_window()<CR>',
             -- string copy utilities
             ['y'] = '<cmd>lua require("drex.actions").copy_element_name()<CR>',
             ['Y'] = '<cmd>lua require("drex.actions").copy_element_relative_path()<CR>',
