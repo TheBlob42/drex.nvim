@@ -231,10 +231,14 @@ local function paste(move)
             end
 
             if move then
-                luv.fs_rename(element, new_element)
-                rename_loaded_buffers(element, new_element)
-                M.clipboard[element] = nil
-                M.clipboard[new_element] = true
+                local success, error = luv.fs_rename(element, new_element)
+                if success then
+                    rename_loaded_buffers(element, new_element)
+                    M.clipboard[element] = nil
+                    M.clipboard[new_element] = true
+                else
+                    vim.notify("Could not move '" .. element .. "':\n" .. error, vim.log.levels.ERROR, { title = 'DREX' })
+                end
             else
                 copy(element, new_element)
             end
