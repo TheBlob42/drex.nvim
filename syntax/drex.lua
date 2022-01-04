@@ -4,7 +4,7 @@ end
 
 local sep = require('drex.utils').path_separator
 -- conceal full paths (like `vim-dirvish`)
-vim.cmd([[syntax match DrexPath "\([a-zA-Z]:\)\?\]]..sep..[[.*\]]..sep..[[" conceal cchar= ]])
+vim.cmd([[syntax match DrexPath "\([a-zA-Z]:\)\?\]]..sep..[[\(.*\]]..sep..[[\)\?" conceal cchar= ]])
 
 local clipboard = require('drex.actions').clipboard
 local esc = require('drex.utils').vim_escape

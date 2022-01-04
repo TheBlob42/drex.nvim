@@ -443,7 +443,10 @@ function M.open_parent_directory()
     utils.check_if_drex_buffer(api.nvim_get_current_buf())
 
     local root_path = utils.get_root_path(0)
-    local parent_path = vim.fn.fnamemodify(root_path, ':h:h') .. utils.path_separator
+    -- double `fnamemodify` to ensure trailing path separator (except for root)
+    local fnamemodify = vim.fn.fnamemodify
+    local parent_path = fnamemodify(fnamemodify(root_path, ':h:h'), ':p')
+
     M.open_directory_buffer(parent_path)
     M.focus_element(0, root_path)
 end
