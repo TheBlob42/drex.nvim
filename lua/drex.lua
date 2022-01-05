@@ -447,6 +447,10 @@ function M.open_parent_directory()
     local fnamemodify = vim.fn.fnamemodify
     local parent_path = fnamemodify(fnamemodify(root_path, ':h:h'), ':p')
 
+    if root_path == parent_path then
+        return vim.notify("'" .. root_path .. "' has no parent!", vim.log.levels.WARN, { title = 'DREX' })
+    end
+
     M.open_directory_buffer(parent_path)
     M.focus_element(0, root_path)
 end
