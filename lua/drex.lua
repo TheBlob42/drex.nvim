@@ -18,7 +18,7 @@ local function load_buffer_content(buffer)
     local buflines = api.nvim_buf_get_lines(buffer, 0, -1, false)
 
     if #buflines == 0 then
-        utils.echo('DREX buffer ' .. buffer .. ' is either unloaded or in a "funky" state. This should not happen, so check if we can reproduce it and file an issue :-)', 'WarningMsg')
+        utils.echo('DREX buffer ' .. buffer .. ' is either unloaded or in a "funky" state. This should not happen, so check if we can reproduce it and file an issue :-)', true, 'WarningMsg')
     end
 
     -- check if the buffer has any "content" (any lines with text)
@@ -148,7 +148,7 @@ function M.open_directory_buffer(path)
     path = utils.expand_path(path or '.')
 
     if not utils.is_valid_directory(path) then
-        utils.echo("'" .. path .. "' does not point to a valid directory!", 'ErrorMsg')
+        vim.notify("The path '" .. path .. "' does not point to a valid directory!", vim.log.levels.ERROR, { title = 'DREX' })
         return
     end
 
@@ -269,7 +269,7 @@ function M.collapse_directory(buffer, row)
 
     -- don't collapse the root path of the DREX buffer
     if path == utils.get_root_path(buffer) then
-        utils.echo('Can not collapse root path!', 'ErrorMsg')
+        vim.notify('Can not collapse root path!', vim.log.levels.WARN, { title = 'DREX' })
         return
     end
 
@@ -334,7 +334,7 @@ function M.reload_directory(buffer, path)
     path = path or utils.get_root_path(buffer)
 
     if not utils.is_valid_directory(path) then
-        utils.echo("The given path '" .. path .. "' is not a directory!", 'ErrorMsg')
+        utils.echo("The given path '" .. path .. "' is not a directory!", true, 'ErrorMsg')
         return
     end
 
@@ -477,7 +477,7 @@ function M.open_file(pre, change_tab)
     local line = api.nvim_get_current_line()
 
     if utils.is_directory(line) then
-        utils.echo('Current line is not a file!', 'ErrorMsg')
+        vim.notify('Current line is not a file!', vim.log.levels.ERROR, { title = 'DREX' })
         return
     end
 
@@ -529,7 +529,7 @@ function M.focus_element(win, path)
     end
 
     if not api.nvim_win_is_valid(win) then
-        utils.echo('Window ' .. win .. ' does not exist!', 'ErrorMsg')
+        utils.echo('Window ' .. win .. ' does not exist!', true, 'ErrorMsg')
         return
     end
 

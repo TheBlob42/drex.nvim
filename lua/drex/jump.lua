@@ -11,7 +11,7 @@ function M.jump_to_parent()
     local path = utils.get_path(api.nvim_get_current_line())
 
     if path == utils.get_root_path(buffer) then
-        utils.echo('Already at root path!', 'WarningMsg')
+        vim.notify('Already at root path!', vim.log.levels.WARN, { title = 'DREX' })
         return
     end
 

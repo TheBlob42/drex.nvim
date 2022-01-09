@@ -173,10 +173,11 @@ end
 
 ---Simple wrapper around `vim.api.nvim_echo` to simplify its usage
 ---@param msg string Message which should be displayed
----@param highlight string (Optional) Highlight group to use
-function M.echo(msg, highlight)
+---@param history boolean (Optional) Should the message be logged in the history (defaults to `false`)
+---@param highlight string (Optional) Highlight group to use (defaults to 'None')
+function M.echo(msg, history, highlight)
     highlight = highlight or 'None'
-    api.nvim_echo({{ msg, highlight }}, false, {})
+    api.nvim_echo({{ msg, highlight }}, history, {})
 end
 
 ---Check if the given `buffer` is a valid DREX buffer
