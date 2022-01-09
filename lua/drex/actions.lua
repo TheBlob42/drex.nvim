@@ -840,7 +840,9 @@ function M.delete(mode)
         table.sort(elements, function(a, b) return a > b end)
     end
 
-    for _, element in ipairs(elements) do
+    local delete_counter = 0
+
+    for index, element in ipairs(elements) do
         local error
         if luv.fs_stat(element).type == 'directory' then
             error = delete_directory(element)
@@ -849,11 +851,19 @@ function M.delete(mode)
         end
 
         if error then
-            clear_matches()
-            utils.echo('Could not delete ' .. element .. ' (' .. error .. '). Abort!', 'ErrorMsg')
-            return false
+            utils.echo("Could not delete '" .. element .. "':\n" .. error, false, 'ErrorMsg')
+            if index < #elements then
+                if vim.fn.confirm('Continue?', '&Yes\n&No', 1) == 1 then
+                    goto continue
+                else
+                    clear_matches()
+                    reload_drex_syntax()
+                    return false
+                end
+            end
         end
 
+        delete_counter = delete_counter + 1
         M.clipboard[element] = nil
 
         -- delete corresponding (and loaded) buffer
@@ -864,8 +874,11 @@ function M.delete(mode)
                 end
             end
         end
+
+        ::continue::
     end
 
+    vim.notify('Deleted ' .. delete_counter .. ' element' .. (delete_counter > 1 and 's' or ''), vim.log.levels.INFO, { title = 'DREX' })
     clear_matches()
     reload_drex_syntax()
     return true
