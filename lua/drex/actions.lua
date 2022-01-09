@@ -203,7 +203,7 @@ local function paste(move)
     -- check for an empty clipboard
     if vim.tbl_count(elements) == 0 then
         local action_string = move and 'move' or 'paste'
-        utils.echo('No elements to ' .. action_string .. '! Fill your clipboard by marking elements :-)')
+        vim.notify('The clipboard is empty! There is nothing to ' .. action_string .. '...', vim.log.levels.INFO, { title = 'DREX' })
         return
     end
 
@@ -586,7 +586,7 @@ function M.multi_rename(mode)
     if mode == 'clipboard' then
         elements = get_clipboard_entries('desc')
         if #elements == 0 then
-            utils.echo('The clipboard is empty! There is nothing to rename...')
+            vim.notify('The clipboard is empty! There is nothing to rename...', vim.log.levels.INFO, { title = 'DREX' })
             return
         end
     elseif mode == 'visual' then
@@ -643,7 +643,7 @@ function M.multi_rename(mode)
                 end
 
                 vim.cmd('redraw')
-                utils.echo(table.concat(diff, '\n'), 'WarningMsg')
+                utils.echo(table.concat(diff, '\n'), false, 'WarningMsg')
                 confirm = vim.fn.confirm('Should your changes be applied?', '&Yes\n&No', 2)
 
                 vim.opt.cmdheight = cmd_height
@@ -658,7 +658,7 @@ function M.multi_rename(mode)
                         local _, error = rename_element(old_element, new_element)
                         if error then
                             vim.cmd('redraw')
-                            utils.echo(error, 'ErrorMsg')
+                            utils.echo(error, false, 'ErrorMsg')
                             if index < #elements and vim.fn.confirm('Continue?', '&Yes\n&No', 1) ~= 1 then
                                 return
                             end
@@ -675,8 +675,9 @@ function M.multi_rename(mode)
 
                 if renamed_counter > 0 then
                     vim.cmd('redraw')
-                    local msg = 'Renamed ' .. renamed_counter .. ' element' .. (renamed_counter > 1 and 's' or '') .. ' successfully'
-                    utils.echo(msg)
+                    local msg = 'Renamed ' .. renamed_counter .. ' element' .. (renamed_counter > 1 and 's' or '')
+                    -- scheduling is needed inside autocommand call to avoid issues with `vim-notify`
+                    vim.schedule(function() vim.notify(msg, vim.log.levels.INFO, { title = 'DREX' }) end)
                 end
             end
         end
@@ -726,7 +727,7 @@ function M.rename()
             end
         end
     else
-        utils.echo(error, 'ErrorMsg')
+        vim.notify("Could not rename '" .. old_element .. "':\n" .. error, vim.log.levels.ERROR, { title = 'DREX' })
     end
 end
 
@@ -760,7 +761,7 @@ function M.create()
         local mode = luv.constants.O_CREAT + luv.constants.O_WRONLY + luv.constants.O_TRUNC
         local fd, error = luv.fs_open(new_element, 'w', mode)
         if error then
-            utils.echo('Could not create file ' .. new_element .. ' (' .. error .. ')', 'ErrorMsg')
+            vim.notify("Could not create file '" .. new_element .. "':\n" .. error, vim.log.levels.ERROR, { title = 'DREX' })
             return
         end
 
@@ -805,7 +806,7 @@ function M.delete(mode)
     if mode == 'clipboard' then
         elements = get_clipboard_entries('asc')
         if #elements == 0 then
-            utils.echo('The clipboard is empty! There is nothing to delete...')
+            vim.notify('The clipboard is empty! There is nothing to delete...', vim.log.levels.INFO, { title = 'DREX' })
             return true
         end
         utils.echo('[CLIPBOARD DELETE]')
@@ -881,7 +882,7 @@ function M.stats()
     local details = luv.fs_stat(element)
 
     if not details then
-        utils.echo("Could not read details for '" .. element .. "'!", 'ErrorMsg')
+        vim.notify("Could not read details for '" .. element .. "'!", vim.log.levels.ERROR, { title = 'DREX' })
         return
     end
 
@@ -977,12 +978,11 @@ local function copy_element_strings(selection, extract_fn)
         for row = startRow, endRow, 1 do
             table.insert(lines, extract_fn(vim.fn.getline(row)))
         end
-        vim.cmd [[ redraw ]] -- needed to avoid the following output to vanish instantly
-        utils.echo('Copied ' .. (endRow - startRow + 1) .. ' values to text clipboard')
+        vim.notify('Copied ' .. (endRow - startRow + 1) .. ' values to text clipboard', vim.log.levels.INFO, { title = 'DREX' })
     else
         local line_value = extract_fn(api.nvim_get_current_line())
         table.insert(lines, line_value)
-        utils.echo("Copied '" .. line_value .. "' to text clipboard")
+        vim.notify("Copied '" .. line_value .. "' to text clipboard", vim.log.levels.INFO, { title = 'DREX' })
     end
 
     local value = table.concat(lines, '\n')

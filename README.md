@@ -393,7 +393,7 @@ DREX is not feature complete as there are still some issues and missing features
 - [X] rename multiple selected elements at once (similar to [vim-renamer](https://github.com/qpkorr/vim-renamer))
 - [X] make the clipboard more interactive (e.g. remove single entries from it)
 - [ ] optionally integrate with [nui.nvim](https://github.com/MunifTanjim/nui.nvim) 
-- [ ] optionally integrate with [nvim-notify](https://github.com/rcarriga/nvim-notify) 
+- [X] optionally integrate with [nvim-notify](https://github.com/rcarriga/nvim-notify) 
 - [ ] ...
 
 > Note that these are ideas from the top of my heads and are subject to change  
