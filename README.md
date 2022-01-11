@@ -22,9 +22,10 @@ Another (opinionated) **D**i**R**ectory **EX**plorer for Neovim
 
 There are many awesome file/directory explorer plugins available for (Neo)VIM
 
-- [nvim-tree]() 
-- [vim-dirvish]() 
-- [fern]() 
+- [nvim-tree](https://github.com/kyazdani42/nvim-tree.lua)
+- [vim-dirvish](https://github.com/justinmk/vim-dirvish)
+- [fern](https://github.com/lambdalisue/fern.vim)
+- [nerdtree](https://github.com/preservim/nerdtree)
 - ...
 
 Despite all these great solutions none of them fit 100% with me as I would always find something that annoyed me or did not work the way I though it should. This with my incapability to write VimScript (and no intention to master it) lead to start this project
