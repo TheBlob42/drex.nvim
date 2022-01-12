@@ -83,7 +83,11 @@ local default_config = {
 ---@return boolean invalid `true` if there is a problem with the given `value`, `false` otherwise
 local function is_invalid_dir_icon(name, value)
     if not value or #value == 0 or value:find('[ /\\]') then
-        vim.api.nvim_err_writeln("Invalid icon value for '" .. name .. "': '" .. value .. "'! Icon has to be set, can not be blank and must not contain ' ', '/' or '\' characters!")
+        vim.notify(
+            "Invalid icon value for '" .. name .. "': '" .. value .. "'! Icon has to be set, can not be blank and must not contain ' ', '/' or '\\' characters!",
+            vim.log.levels.ERROR,
+            { title = 'DREX' }
+        )
         return true
     end
     return false
@@ -102,7 +106,11 @@ local function validate_window_picker_labels(labels)
     end
 
     if #errors > 0 then
-        vim.api.nvim_err_writeln('Found invalid characters for `drawer.window_picker.labels`: ' .. table.concat(errors, '') .. ' fall back to default!')
+        vim.notify(
+            'Found invalid characters for `drawer.window_picker.labels`: "' .. table.concat(errors, '') .. '" fall back to default!',
+            vim.log.levels.ERROR,
+            { title = 'DREX' }
+        )
         return false
     end
 
