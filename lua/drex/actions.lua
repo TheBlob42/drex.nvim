@@ -138,37 +138,95 @@ local function get_destination_path()
     end
 end
 
+---Recursively delete a directory and all of its content
+---If an error occurs during the process return its message, otherwise return `nil`
+---@param path string The directory to delete
+---@return string? error
+local function delete_directory(path)
+    local data, error = luv.fs_scandir(path)
+    if error then
+        return error
+    end
+
+    while true do
+        local name, type = luv.fs_scandir_next(data)
+
+        if not name then
+            break
+        end
+
+        local new_path = path .. utils.path_separator .. name
+        if type == 'directory' then
+            error = delete_directory(new_path)
+        else
+            _, error = luv.fs_unlink(new_path)
+        end
+
+        if error then
+            return error
+        end
+    end
+
+    _, error = luv.fs_rmdir(path)
+    return error
+end
+
 ---Copy an element from `source` to `destination`
 ---For files this simply uses `vim.loop.fs_copyfile`
 ---For directories this will loop through all contained files (using `vim.loop.fs_scandir`) and recursively call itself
 ---@param source string The source location of the element that should be copied
 ---@param destination string The destination location to which the element should be copied
+---@return table files All files which were successfully copied
+---@return table errors All errors which occurred during the copy process
 local function copy(source, destination)
     local source_stats = luv.fs_stat(source)
     if source_stats and source_stats.type == 'file' then
-        luv.fs_copyfile(source, destination, {})
-        return
+        local success, error = luv.fs_copyfile(source, destination, {})
+        if not success then
+            return {}, { error }
+        else
+            return { destination }, {}
+        end
     end
 
     local data, error, _ = luv.fs_scandir(source)
     if error ~= nil then
-        api.nvim_err_writeln(error)
-        return
+        return {}, { error }
     end
 
-    luv.fs_mkdir(destination, source_stats.mode)
+    local total_files = {}
+    local total_errors = {}
+
+    local success, mkdir_error = luv.fs_mkdir(destination, source_stats.mode)
+    if not success then
+        return {}, { mkdir_error }
+    end
 
     while true do
         local name, _ = luv.fs_scandir_next(data)
-
         if not name then
             break
         end
 
         local src_path  = source .. utils.path_separator .. name
         local dest_path = destination .. utils.path_separator .. name
-        copy(src_path, dest_path)
+
+        local files, errors = copy(src_path, dest_path)
+
+        for i = 1, #files do
+            total_files[#total_files + 1] = files[i]
+        end
+        for i = 1, #total_errors do
+            total_errors[#total_errors + 1] = errors[i]
+        end
     end
+
+    -- remove the directory if nothing was copied
+    if #total_files == 0 then
+        delete_directory(destination)
+    end
+
+    return total_files, total_errors
 end
 
 ---Search for buffers named `old_name` and rename them to `new_name`
@@ -192,8 +250,8 @@ end
 ---This will show a warning if there are no elements in the clipboard
 ---
 ---If you "copy" entries (`move` == false) the DREX clipboard entries will be untouched
----
 ---So you can continue copying the contained elements to other locations
+---
 ---If you "move" entries (`move` == true) the DREX clipboard entries will be updated to match the new location
 ---
 ---@param move boolean Indicator if the entries should be moved (removed from their current location) or copied
@@ -212,12 +270,16 @@ local function paste(move)
         return
     end
 
+    local element_counter = 0 -- number of elements which have been moved/copied
+    local files_counter = 0   -- number of files which have been copied (only for 'copy')
+    local errors_found = {}   -- all errors found during the move/copy process
+
     for _, element in ipairs(elements) do
         local name = element:match('.*'..utils.path_separator..'(.*)$')
         local new_element = dest_path .. name
 
         ::rename_check::
-        -- check if the an element with the same name already exists
+        -- check if an element with the same name already exists
         local new_element_stats = luv.fs_stat(new_element)
         local action = 1
         if new_element_stats then
@@ -236,17 +298,50 @@ local function paste(move)
                     rename_loaded_buffers(element, new_element)
                     M.clipboard[element] = nil
                     M.clipboard[new_element] = true
+                    element_counter = element_counter + 1
                 else
-                    vim.notify("Could not move '" .. element .. "':\n" .. error, vim.log.levels.ERROR, { title = 'DREX' })
+                    table.insert(errors_found, error)
                 end
             else
-                copy(element, new_element)
+                local files, errors = copy(element, new_element)
+
+                if #files> 0 then
+                    element_counter = element_counter + 1
+                    files_counter = files_counter + #files
+                end
+
+                for i = 1, #errors do
+                    errors_found[#errors_found + 1] = errors[i]
+                end
+
+                -- update buffers in windows which have been overwritten by pasting
+                for _, win in ipairs(api.nvim_list_wins()) do
+                    local buffer = api.nvim_win_get_buf(win)
+                    if vim.tbl_contains(files, api.nvim_buf_get_name(buffer)) then
+                        api.nvim_buf_call(buffer, function() vim.cmd(':silent edit!') end)
+                    end
+                end
             end
         end
     end
 
-    if move then
-        reload_drex_syntax()
+    if element_counter > 0 then
+        local msg
+        local suffix = element_counter > 1 and 's' or ''
+
+        if move then
+            msg = 'Moved ' .. element_counter .. ' element' .. suffix
+            reload_drex_syntax()
+        else
+            msg = 'Copied ' .. element_counter .. ' element' .. suffix .. ' (' .. files_counter .. ' file' .. suffix .. ')'
+        end
+
+        vim.notify(msg, vim.log.levels.INFO, { title = 'DREX' })
+    end
+
+    if #errors_found > 0 then
+        local msg = table.concat(errors_found, '\n')
+        vim.notify('Could not ' .. (move and 'move' or 'copy') .. ' several elements:\n' .. msg, vim.log.levels.ERROR, { title = 'DREX' })
     end
 end
 
@@ -304,39 +399,6 @@ local function create_directories(path)
     end
 
     return { existing_path, created_path }
-end
-
----Recursively delete a directory and all of its content
----If an error occurs during the process return its message, otherwise return `nil`
----@param path string The directory to delete
----@return string
-local function delete_directory(path)
-    local data, error = luv.fs_scandir(path)
-    if error then
-        return error
-    end
-
-    while true do
-        local name, type = luv.fs_scandir_next(data)
-
-        if not name then
-            break
-        end
-
-        local new_path = path .. utils.path_separator .. name
-        if type == 'directory' then
-            error = delete_directory(new_path)
-        else
-            _, error = luv.fs_unlink(new_path)
-        end
-
-        if error then
-            return error
-        end
-    end
-
-    _, error = luv.fs_rmdir(path)
-    return error
 end
 
 -- ####################################
