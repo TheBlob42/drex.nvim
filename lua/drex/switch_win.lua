@@ -202,7 +202,7 @@ local letters = {
     },
 }
 
----Switch to another window than the current
+---Switch to another window than the current (ignore floating windows)
 ---If there is just one other window, switch directly to it
 ---If there are multiple other windows, show a character label for every other window and switch to window chosen by label
 ---Return `true` if the window was switched successfully (or if there was no other window)
@@ -211,7 +211,16 @@ local letters = {
 function M.switch_window()
     local current_window = api.nvim_get_current_win()
     local target_windows = vim.tbl_filter(function(win)
-        return win ~= current_window
+        if win == current_window then
+            return false
+        end
+
+        -- ignore floating windows
+        if vim.api.nvim_win_get_config(win).relative ~= '' then
+            return false
+        end
+
+        return true
     end, api.nvim_tabpage_list_wins(0))
 
     if #target_windows == 0 then
