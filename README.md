@@ -329,24 +329,23 @@ disable_default_keybindings = true
 
 ### Callbacks
 
-| Option           | Description                                      | Default         |
-| ---------------- | ---------------                                  | --------------- |
-| `on_enter`       | fn to call whenever a DREX buffer enters a window | `nil`           |
-| `on_leave`       | fn to call whenever a DREX buffer leaves a window | `nil`           |
+| Option           | Description                                         | Default         |
+| ---------------- | ---------------                                     | --------------- |
+| `on_enter`       | fn to call when entering a DREX buffer (`BufEnter`) | `nil`           |
+| `on_leave`       | fn to call when leaving a DREX buffer (`BufLeave`)  | `nil`           |
 
-These functions are especially useful to set window specific options for buffers
+Execute custom logic when entering or leaving a DREX buffer
 
 ```lua
--- e.g. hide line numbers for DREX buffers
+-- for example hide line numbers in DREX buffers
 require('drex.config').configure {
     on_enter = function()
-        vim.wo.number = false
-    end,
-    on_leave = function()
-        vim.wo.number = true
-    end,
+        vim.cmd('setlocal nonumber')
+    end
 }
 ```
+
+> If you like to set "local window options" for DREX buffers (`number`, `signcolumn`, `colorcolumn`, etc.) use `setlocal` like in the above example instead of `vim.wo` or `vim.opt_local`. Otherwise it might not work as intended. Read `:h local-options` and see [Neovim Issue #14670](https://github.com/neovim/neovim/issues/14670) for more information
 
 ## Customization
 
