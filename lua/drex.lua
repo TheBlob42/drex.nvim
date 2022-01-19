@@ -123,13 +123,16 @@ end
 -- ### basic DREX functionality
 -- ####################################
 
----Set sane local defaults when a DREX buffer enters a window
+---Set sane local defaults when entering a DREX buffer
 ---No need to call this function manually, there is an autocmd for it
 function M.on_enter()
-    vim.opt_local.wrap = false          -- wrap and conceal don't play well together
-    vim.opt_local.cursorline = true     -- make the selected line better visible
-    vim.opt_local.conceallevel = 3      -- hide full path completely
-    vim.opt_local.concealcursor = 'nvc' -- don't reveal full path on cursor
+    -- not using `vim.opt_local` here because: https://github.com/neovim/neovim/issues/14670
+    vim.cmd [[
+        setlocal nowrap            " wrap and conceal don't play well together
+        setlocal cursorline        " make the selected line better visible
+        setlocal conceallevel=3    " hide full path completely
+        setlocal concealcursor=nvc " don't reveal full path on cursor
+    ]]
 
     if config.on_enter then
         config.on_enter()
@@ -138,7 +141,7 @@ function M.on_enter()
     vim.cmd("doautocmd Syntax") -- reload syntax
 end
 
----Reset options when a DREX buffer leaves a window
+---Call custom logic when leaving a DREX buffer
 ---No need to call this function manually, there is an autocmd for it
 function M.on_leave()
     if config.on_leave then
@@ -184,7 +187,6 @@ function M.open_directory_buffer(path)
         augroup DrexBuflocal
             autocmd! * <buffer>
             autocmd BufEnter <buffer> lua require('drex').on_enter()
-            autocmd WinLeave <buffer> lua require('drex').on_enter()
             autocmd BufLeave <buffer> lua require('drex').on_leave()
         augroup END
     ]]
