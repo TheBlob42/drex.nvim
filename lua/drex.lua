@@ -397,40 +397,47 @@ function M.reload_directory(buffer, path)
         return
     end
 
+    if #new_content == 0 then
+        -- empty directory, we can take a shortcut here
+        return
+    end
+
     if start_row >= api.nvim_buf_line_count(buffer) then
         -- `path` got deleted completely
         -- `path` was the last element of `buffer`
         return
     end
 
-    -- reopen previously opened sub directories
-    local progress = true
-    while progress do
-        local lines = api.nvim_buf_get_lines(buffer, start_row, -1, false)
-        for row, line in ipairs(lines) do
-            local element = utils.get_element(line)
-            if open_dirs[element] then
-                M.expand_element(buffer, row + start_row)
-                start_row = start_row + row
-                break
-            end
+    if #open_dirs > 0 then
+        -- reopen previously opened sub directories
+        local progress = true
+        while progress do
+            local lines = api.nvim_buf_get_lines(buffer, start_row, -1, false)
+            for row, line in ipairs(lines) do
+                local element = utils.get_element(line)
+                if open_dirs[element] then
+                    M.expand_element(buffer, row + start_row)
+                    start_row = start_row + row
+                    break
+                end
 
-            -- outside of given path
-            if not utils.starts_with(element, path) then
-                progress = false
-                break
-            end
+                -- outside of given path
+                if not utils.starts_with(element, path) then
+                    progress = false
+                    break
+                end
 
-            -- no more lines to check
-            if row == #lines then
-                progress = false
+                -- no more lines to check
+                if row == #lines then
+                    progress = false
+                end
             end
         end
     end
 
     -- restore cursor positions for all windows that display `buffer`
     for win, pos in pairs(windows) do
-        -- use `pcall` as the cursor positon might be invalid (outside of the displayed buffer)
+        -- use `pcall` as the cursor position might be invalid (outside of the displayed buffer)
         local success = pcall(api.nvim_win_set_cursor, win, pos)
         if not success then
             api.nvim_win_call(win, function() vim.cmd("normal G") end)
