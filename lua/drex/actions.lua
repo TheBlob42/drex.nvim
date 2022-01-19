@@ -115,6 +115,12 @@ end
 local function get_destination_path()
     local line = api.nvim_get_current_line()
 
+    -- if the DREX buffer represents an empty directory
+    -- there is only a single empty line present
+    if line == '' then
+        return utils.get_root_path(0)
+    end
+
     if utils.is_directory(line) then
         local same_level_path = utils.get_path(line)
         local inside_path     = utils.get_element(line) .. utils.path_separator
