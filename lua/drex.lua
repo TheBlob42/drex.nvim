@@ -45,6 +45,7 @@ end
 ---This function will expand sub directories to get to the target element if needed
 ---
 ---An error is thrown under the following conditions:
+---- The `path` is equal to the root path of the buffer
 ---- The `path` is not relative to the root path of `buffer`
 ---- The target element does not exist
 ---@param buffer number The target DREX buffer
@@ -53,6 +54,10 @@ end
 local function expand_path(buffer, path)
     path = utils.expand_path(path or '%')
     local root_path = utils.get_root_path(buffer)
+
+    if path == root_path then
+        error("The given path '" .. path .. "' is equal to the buffers root path!", 0)
+    end
 
     if not utils.starts_with(path, root_path) then
         error("Can not find '" .. path .. "'! Wrong root path ('" .. root_path .. "').", 0)
@@ -331,7 +336,8 @@ function M.reload_directory(buffer, path)
 
     utils.check_if_drex_buffer(buffer)
 
-    path = path or utils.get_root_path(buffer)
+    local root_path = utils.get_root_path(buffer)
+    path = path or root_path
 
     if not utils.is_valid_directory(path) then
         utils.echo("The given path '" .. path .. "' is not a directory!", true, 'ErrorMsg')
@@ -341,9 +347,11 @@ function M.reload_directory(buffer, path)
     -- check if the buffer content has been erased and reload if necessary
     if load_buffer_content(buffer) then
         -- if we had to reset the whole buffer content we can abort here
-        -- but at least we should expand `path` in case it's not the root path of current buffer
-        local row = expand_path(buffer, path)
-        M.expand_element(buffer, row)
+        -- but at least we should expand `path` (in case it's not the root path of current buffer)
+        if path ~= root_path then
+            local row = expand_path(buffer, path)
+            M.expand_element(buffer, row)
+        end
         return
     end
 
@@ -352,7 +360,7 @@ function M.reload_directory(buffer, path)
     local end_row        -- the last row which belongs to the given path
     local open_dirs = {} -- remember open directories (to afterwards re-open them again)
 
-    if path == utils.get_root_path(buffer) then
+    if path == root_path then
         start_row = 0
     end
 
