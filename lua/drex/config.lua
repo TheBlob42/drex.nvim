@@ -208,7 +208,11 @@ function M.set_default_keybindings(buffer)
             if rhs then
                 if type(rhs) == 'function' then
                     -- call custom function from the `M._fn` table
-                    rhs = string.format(":lua require('drex.config')._fn['%s']['%s']()<CR>", mode, lhs)
+                    rhs = string.format(
+                        ":lua require('drex.config')._fn['%s']['%s']()<CR>",
+                        mode,
+                        lhs:gsub('<', '<lt>') -- escape keycodes like '<CR>', '<Esc>', etc.
+                    )
                 end
 
                 vim.api.nvim_buf_set_keymap(buffer, mode, lhs, rhs, opts)
