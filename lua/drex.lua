@@ -418,7 +418,7 @@ function M.reload_directory(buffer, path)
         return
     end
 
-    if #open_dirs > 0 then
+    if vim.tbl_count(open_dirs) > 0 then
         -- reopen previously opened sub directories
         local progress = true
         while progress do
