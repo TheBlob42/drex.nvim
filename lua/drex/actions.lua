@@ -245,8 +245,10 @@ local function rename_loaded_buffers(old_name, new_name)
             if utils.starts_with(buf_name, old_name) then
                 local new_buf_name = buf_name:gsub(utils.escape(old_name), new_name)
                 api.nvim_buf_set_name(buf, new_buf_name)
-                -- avoid 'overwrite existing file' error
-                api.nvim_buf_call(buf, function() vim.cmd('silent! w!') end)
+                api.nvim_buf_call(buf, function()
+                    vim.cmd('silent! w!')  -- avoid 'overwrite existing file' error
+                    vim.cmd('silent edit') -- to re-attach LSP etc.
+                end)
             end
         end
     end
