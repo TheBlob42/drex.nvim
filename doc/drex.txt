@@ -1,0 +1,390 @@
+*drex.txt*                               Another directory explorer for Neovim
+
+License:	GLP3
+Website:	https://github.com/TheBlob42/drex.nvim
+
+==============================================================================
+FEATURES                                                       *drex-features*
+
+- easily navigate through your file system
+- split window and project drawer support
+- add, copy, move, rename and delete elements
+- mark and operate on multiple elements
+- automatic file system synchronization
+- powered by `libuv` (see |vim.loop|)
+
+==============================================================================
+INSTALLATION                                               *drex-installation*
+
+The plugin requires Neovim version >= 0.5
+
+PACKER~
+(https://github.com/wbthomason/packer.nvim)
+>
+	use {
+		'theblob42/drex.nvim',
+		requires = 'kyazdani42/nvim-web-devicons', -- optional
+	}
+<
+VIM-PLUG~
+(https://github.com/junegunn/vim-plug)
+>
+	Plug 'theblob42/drex.nvim'
+	Plug 'kyazdani42/nvim-web-devicons' " optional
+<
+You only need to install `nvim-web-devicons` if you like to have nice file
+type icons. The plugin works fine without it.
+
+==============================================================================
+USAGE                                                             *drex-usage*
+
+Open a DREX buffer in the current working directory:
+>
+	:Drex
+<
+You can also provide a target path:
+>
+	:Drex ~/projects
+<
+To open the parent directory of the current file:
+>
+	:Drex %:h
+<
+Note: See |cmdline-special| and |filename-modifiers|
+
+DREX also comes with a simple project drawer functionality:
+>
+	:DrexDrawerOpen
+<
+See |drex-commands| for more available commands
+                                                    *drex-default-keybindings*
+
+- Use `j` and `k` like in any other VIM buffer to navigate up and down
+- `v` is mapped to `V` because there is no need for charwise selection
+
+Basic navigation~
+
+- `l` expands the current element
+  - If it is a directory open its content in a subtree
+  - If it is a file open the file in the current window
+  - `<Right>` and `<2-LeftMouse>` are alternative keybindings
+- `h` collapses the current directories subtree
+  - If the element under the cursor is an open directory collapse it
+  - Otherwise collapse the parent directory of the element
+  - `<Left>` and `<RightMouse>` are alternative keybindings
+- `<C-v>` opens a file in a vertical split
+- `<C-x>` opens a file in a horizontal split
+- `<C-t>` opens a file in a new tab
+- `<F5>` reloads the current directory (dependent on the cursor position)
+- `<C-h>` opens a new DREX buffer in the parent directory of the current root
+- `<C-l>` opens the directory under the cursor in a new DREX buffer
+
+Jumping~
+
+- `gj` jumps to the next sibling
+- `gk` jumps to the previous sibling
+- `gh` jumps to the parent directory of the current element
+
+Clipboard~
+
+- `m` marks or unmarks the current element (add or remove it from the clipboard)
+- `M` marks the current element (add it to the clipboard)
+- `u` unmarks the current element (remove it from the clipboard)
+- `cc` clears the clipboard content
+- `cs` to show and edit the content of the clipboard
+
+Actions~
+
+- `s` shows the stats for the current element
+- `a` creates a new file or directory
+  - to create a new directory end your input with a `/`
+  - non-existent parent directories will be created
+    (e.g. `foo/bar/file` will create `foo` and `bar` if they don't exist yet)
+- `d` deletes the element under the cursor (or the visual selection)
+- `D` deletes all elements currently contained in the clipboard
+- `p` copies all elements from the clipboard to the path under the cursor
+  - this will NOT clear the clipboard, so you can continue to paste elsewhere
+- `P` moves all elements from the clipboard to the path under the cursor
+- `r` renames the element under the cursor (or the visual selection)
+  - this can move the element to another location
+  - non-existent parent directories will be created
+    (e.g. `foo/bar/file` will create `foo` and `bar` if they don't exist yet)
+- `R` to multi rename all elements from the clipboard
+
+Copy strings~
+
+- `y` copies the name of the element under the cursor
+- `Y` copies the relative path of the element under the cursor
+- `<C-Y>` copies the absolute path of the element under the cursor
+
+Note: In visual mode these copy all selected elements (separated by "\n")
+
+==============================================================================
+CONFIGURATION                                             *drex-configuration*
+
+There is no initial setup needed for DREX.
+However you may configure certain settings to your liking.
+
+                                                  *drex-default-configuration*
+>
+    require('drex.config').configure {
+		icons = {
+			dir_open = "",
+			dir_closed = "",
+			file_default = "🗎",
+		},
+		drawer = {
+			default_width = 30,
+			window_picker = {
+				enabled = true,
+				labels = 'abcdefghijklmnopqrstuvwxyz',
+			},
+		},
+		disable_default_keybindings = false,
+		keybindings = {
+			['n'] = {
+				['v'] = 'V',
+				['l'] = '<cmd>lua require("drex").expand_element()<CR>',
+				['h'] = '<cmd>lua require("drex").collapse_directory()<CR>',
+				['<right>'] = '<cmd>lua require("drex").expand_element()<CR>',
+				['<left>']  = '<cmd>lua require("drex").collapse_directory()<CR>',
+				['<2-LeftMouse>'] = '<LeftMouse><cmd>lua require("drex").expand_element()<CR>',
+				['<RightMouse>']  = '<LeftMouse><cmd>lua require("drex").collapse_directory()<CR>',
+				['<C-v>'] = '<cmd>lua require("drex").open_file("vs")<CR>',
+				['<C-x>'] = '<cmd>lua require("drex").open_file("sp")<CR>',
+				['<C-t>'] = '<cmd>lua require("drex").open_file("tabnew")<CR>',
+				['<C-l>'] = '<cmd>lua require("drex").open_directory()<CR>',
+				['<C-h>'] = '<cmd>lua require("drex").open_parent_directory()<CR>',
+				['<F5>'] = '<cmd>lua require("drex").reload_directory()<CR>',
+				['gj'] = '<cmd>lua require("drex.jump").jump_to_next_sibling()<CR>',
+				['gk'] = '<cmd>lua require("drex.jump").jump_to_prev_sibling()<CR>',
+				['gh'] = '<cmd>lua require("drex.jump").jump_to_parent()<CR>',
+				['s'] = '<cmd>lua require("drex.actions").stats()<CR>',
+				['a'] = '<cmd>lua require("drex.actions").create()<CR>',
+				['d'] = '<cmd>lua require("drex.actions").delete("line")<CR>',
+				['D'] = '<cmd>lua require("drex.actions").delete("clipboard")<CR>',
+				['p'] = '<cmd>lua require("drex.actions").copy_and_paste()<CR>',
+				['P'] = '<cmd>lua require("drex.actions").cut_and_move()<CR>',
+				['r'] = '<cmd>lua require("drex.actions").rename()<CR>',
+				['R'] = '<cmd>lua require("drex.actions").multi_rename("clipboard")<CR>',
+				['M'] = '<cmd>DrexMark<CR>',
+				['u'] = '<cmd>DrexUnmark<CR>',
+				['m'] = '<cmd>DrexToggle<CR>',
+				['cc'] = '<cmd>lua require("drex.actions").clear_clipboard()<CR>',
+				['cs'] = '<cmd>lua require("drex.actions").open_clipboard_window()<CR>',
+				['y'] = '<cmd>lua require("drex.actions").copy_element_name()<CR>',
+				['Y'] = '<cmd>lua require("drex.actions").copy_element_relative_path()<CR>',
+				['<C-y>'] = '<cmd>lua require("drex.actions").copy_element_absolute_path()<CR>',
+			},
+			['v'] = {
+				['d'] = ':lua require("drex.actions").delete("visual")<CR>',
+				['r'] = ':lua require("drex.actions").multi_rename("visual")<CR>',
+				['M'] = ':DrexMark<CR>',
+				['u'] = ':DrexUnmark<CR>',
+				['m'] = ':DrexToggle<CR>',
+				['y'] = ':lua require("drex.actions").copy_element_name(true)<CR>',
+				['Y'] = ':lua require("drex.actions").copy_element_relative_path(true)<CR>',
+				['<C-y>'] = ':lua require("drex.actions").copy_element_absolute_path(true)<CR>',
+			}
+		},
+		on_enter = nil,
+		on_leave = nil,
+    }
+<
+------------------------------------------------------------------------------
+ICONS                                               *drex-configuration-icons*
+
+Icons are used for the user as a help to quickly identify an element as well as
+for DREX to differentiate between them:
+>
+ 	icons = {
+		dir_open = "",
+		dir_closed = "",
+		file_default = "🗎",
+	}
+<
+Note: The `file_default` icon is used for all file elements in the case that 
+`nvim-web-devicons` is not installed.
+
+Note: If you don't see the correct default icons here you need to install and
+configure a `NerdFont` (https://www.nerdfonts.com/). Or change them to another
+character.
+
+------------------------------------------------------------------------------
+DRAWER                                             *drex-configuration-drawer*
+
+Options specific to the |drex-drawer| functionality:
+>
+	drawer = {
+		default_width = 30,
+		window_picker = {
+			enabled = true,
+			labels = 'abcdefghijklmnopqrstuvwxyz',
+		},
+	},
+<
+- `default_width` - the default width of the drawer window (columns)
+
+                                                          *drex-window-picker*
+Window Picker~
+
+If there is more than one target window to open a file in from the DREX drawer
+the window picker will display a character label in each of those. By pressing
+the corresponding character the file will be opened in the this window (for
+splits: the window will be used as origin). Pressing `<Esc>` or any not shown
+character will cancel.
+
+- `enabled` - automatically used when opening files from the drawer
+- `labels` - labels to use for window selection (from left to right)
+
+Note: If you disable the window picker DREX will use |CTRL-W_p| instead.
+
+------------------------------------------------------------------------------
+KEYBINDINGS                                   *drex-configuration-keybindings*
+
+For a pleasant "out of the box" experience DREX provides a set of default
+keybindings. If these defaults do not fit you, there are multiple ways to
+adapt them to your preferences.
+
+You can add or overwrite existing keybindings:
+>
+	keybindings = {
+		['n'] = {
+			['o'] = '<cmd>echo "Your command"<cr>',
+			['O'] = function()
+				print('Lua functions are also supported')
+			end,
+		}
+	}
+<
+You can disable a specific keybinding by setting its value to `false`:
+>
+	keybindings = {
+		['n'] = {
+			['a'] = false
+		}
+	}
+<
+To disable ALL default keybindings:
+>
+	disable_default_keybindings = true
+<
+For a list of all available default keybindings see |drex-default-keybindings|
+
+------------------------------------------------------------------------------
+CALLBACKS                                       *drex-configuration-callbacks*
+
+Custom callback functions which are called whenever you enter a DREX buffer
+(`on_enter`triggers on |BufEnter|) or when you leave it (`on_leave`triggers on
+|BufLeave|).
+>
+	on_enter = nil,
+	on_leave = nil,
+<
+When entering a DREX buffer the following options are set automatically:
+
+- |nowrap|
+- |cursorline|
+- |conceallevel| to 3
+- |concealcursor| to "nvc"
+
+You can overwrite these defaults, revert them or call any other custom logic
+you like. For example to hide line numbers (|nonumber|) within DREX buffers
+use:
+>
+	on_enter = function()
+		vim.cmd('setlocal nonumber')
+	end
+<
+Note: To set local window options (like |'number'| or |signcolumn|) use
+|setlocal| instead of |vim.wo| or `vim.opt_local`. Otherwise it might not
+work as intended. See: https://github.com/neovim/neovim/issues/14670
+
+==============================================================================
+CUSTOMIZATION                                             *drex-customization*
+
+If you miss a certain functionality or have a very specific use case, you can
+implement a custom action very easily. Every line within a DREX buffer is just
+an absolute file path (plus some indentation and an icon) hidden via
+|conceal| (use `set conceallevel=0` to see).
+
+You can easily access the different parts of an element with the helper
+functions found `lua/drex/utils.lua`:
+>
+	local utils = require('drex.utils')
+	local line = vim.api.nvim_get_current_line()
+
+	-- extract certain parts of the current element
+	local element = utils.get_element(line)
+	local icon = utils.get_icon(line)
+	local path = utils.get_path(line)
+	local name = utils.get_name(line)
+
+	-- check the current element
+	local is_dir = utils.is_directory(line)
+	local is_open_dir = utils.is_open_directory(line)
+	local is_closed_dir = utils.is_closed_directory(line)
+<
+For example to open the element under the cursor with your systems default
+application (Linux only):
+>
+	function open_with_default()
+		local line = vim.api.nvim_get_current_line()
+		local path = require('drex.utils').get_element(line)
+		vim.fn.jobstart(
+			"xdg-open '" .. path .. "' &",
+			{ detach = true }
+		)
+	end
+<
+==============================================================================
+COMMANDS                                                       *drex-commands*
+
+                                                                        *Drex*
+:Drex {url}
+	Open a DREX buffer in the current window. If no {url} is provided use
+	the current working directory. {url} can be a relative or absolute
+	path. Also see |cmdline-special| and |filename-modifiers|
+
+                                                              *DrexDrawerOpen*
+:DrexDrawerOpen
+	Open a drawer window with a DREX buffer targeting the current working
+	directory and focus it. If the window is already open, just focus it.
+	Files will be opened in the adjacent windows, see
+	|drex-window-picker| 
+
+                                                             *DrexDrawerClose*
+:DrexDrawerClose
+	Close the current drawer window. If the window is not open this does
+	nothing.
+
+                                                            *DrexDrawerToggle*
+:DrexDrawerToggle
+	If the drawer window is closed, open and focus it. If the drawer
+	window is open, close it instead.
+
+                                                          *DrexDrawerFindFile*
+:DrexDrawerFindFile
+	Find the current file in the drawer window and jump to this element.
+	Keep the focus within the current window.
+
+                                                  *DrexDrawerFindFileAndFocus*
+:DrexDrawerFindFileAndFocus
+	Works just like |DrexDrawerFindFile| but also focus the drawer window.
+
+                                                                    *DrexMark*
+:[range]DrexMark
+	Mark the elements within [range] and them to the DREX clipboard.
+
+                                                                  *DrexUnmark*
+:[range]DrexUnmark
+	Unmark the elements within [range] and remove them from the DREX
+	clipboard.
+
+                                                                  *DrexToggle*
+:[range]DrexToggle
+	Toggle the elements within [range]. Unmark all marked ones (remove
+	them from the DREX clipboard) and mark all unmarked ones (add them to
+	the DREX clipboard).
+
+vim:tw=78:sw=4:ts=4:noet:ft=help:norl:
