@@ -245,17 +245,33 @@ function M.scan_directory(path, root_path)
         local name, type = luv.fs_scandir_next(data)
         if not name then break end
 
+        table.insert(content, {name, type})
+    end
+
+    table.sort(content, function (a, b)
+        local aname, atype = a[1], a[2]
+        local bname, btype = b[1], b[2]
+
+        local aisdir = atype == 'directory'
+        local bisdir = btype == 'directory'
+
+        if aisdir ~= bisdir then
+            return aisdir
+        end
+
+        return aname < bname
+    end)
+
+    for i=1,#content do
+        local name, type = content[i][1], content[i][2]
         local icon = config.icons.file_default
         if type == 'directory' then
             icon = config.icons.dir_closed
         elseif icons_loaded then
             icon = icons.get_icon(name, vim.fn.fnamemodify(name, ':e'), { default = true })
         end
-
-        table.insert(content, indentation .. icon .. ' ' .. path .. name)
+        content[i] = indentation .. icon .. ' ' .. path .. name
     end
-
-    -- TODO implement custom sorting
 
     return content
 end
