@@ -91,7 +91,7 @@ Clipboard~
 - `M` marks the current element (add it to the clipboard)
 - `u` unmarks the current element (remove it from the clipboard)
 - `cc` clears the clipboard content
-- `cs` to show and edit the content of the clipboard
+- `cs` to show and edit the content of the clipboard in a floating window
 
 Actions~
 
@@ -230,7 +230,7 @@ Window Picker~
 
 If there is more than one target window to open a file in from the DREX drawer
 the window picker will display a character label in each of those. By pressing
-the corresponding character the file will be opened in the this window (for
+the corresponding character the file will be opened in this window (for
 splits: the window will be used as origin). Pressing `<Esc>` or any not shown
 character will cancel.
 
@@ -275,8 +275,8 @@ For a list of all available default keybindings see |drex-default-keybindings|
 CALLBACKS                                       *drex-configuration-callbacks*
 
 Custom callback functions which are called whenever you enter a DREX buffer
-(`on_enter`triggers on |BufEnter|) or when you leave it (`on_leave`triggers on
-|BufLeave|).
+(`on_enter` triggers on |BufEnter|) or when you leave it (`on_leave` triggers
+on |BufLeave|).
 >
 	on_enter = nil,
 	on_leave = nil,
@@ -344,14 +344,13 @@ COMMANDS                                                       *drex-commands*
 :Drex {url}
 	Open a DREX buffer in the current window. If no {url} is provided use
 	the current working directory. {url} can be a relative or absolute
-	path. Also see |cmdline-special| and |filename-modifiers|
+	path. Also supports |cmdline-special| and |filename-modifiers|
 
                                                               *DrexDrawerOpen*
 :DrexDrawerOpen
 	Open a drawer window with a DREX buffer targeting the current working
 	directory and focus it. If the window is already open, just focus it.
-	Files will be opened in the adjacent windows, see
-	|drex-window-picker| 
+	Files will be opened in the adjacent windows, see |drex-window-picker|
 
                                                              *DrexDrawerClose*
 :DrexDrawerClose
@@ -387,4 +386,5 @@ COMMANDS                                                       *drex-commands*
 	them from the DREX clipboard) and mark all unmarked ones (add them to
 	the DREX clipboard).
 
-vim:tw=78:sw=4:ts=4:noet:ft=help:norl:
+==============================================================================
+vim:tw=78:sw=4:ts=4:noet:ft=help:norl
