@@ -102,7 +102,7 @@ DREX also comes with a simple project drawer functionality
 - `M` marks the current element (add it to the clipboard)
 - `u` unmarks the current element (remove it from the clipboard)
 - `cc` clears the clipboard content
-- `cs` to show and edit the content of the clipboard
+- `cs` to show and edit the content of the clipboard in a floating window
 
 **Actions**
 
