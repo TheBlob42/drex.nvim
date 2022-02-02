@@ -6,6 +6,19 @@ local default_config = {
         dir_closed = "",
         file_default = "🗎",
     },
+    sorting = function(a, b)
+        local aname, atype = a[1], a[2]
+        local bname, btype = b[1], b[2]
+
+        local aisdir = atype == 'directory'
+        local bisdir = btype == 'directory'
+
+        if aisdir ~= bisdir then
+            return aisdir
+        end
+
+        return aname < bname
+    end,
     drawer = {
         default_width = 30,
         window_picker = {
@@ -117,6 +130,33 @@ local function validate_window_picker_labels(labels)
     return true
 end
 
+---Helper function to check for a valid `sorting` function
+---@param sorting any The sorting entry to validate. Should be `false` or a function
+---@return boolean
+local function validate_sorting(sorting)
+    if sorting then
+        if type(sorting) == 'function' then
+            local test_data = {{ 'x', 'file' }, { 'y', 'link' }, { 'z', 'directory' }}
+            local status_ok, error = pcall(table.sort, test_data, sorting)
+            if not status_ok then
+                vim.notify(
+                    'The provided sorting function throws an error: "' .. error .. '" fall back to default!',
+                    vim.log.levels.ERROR,
+                    { title = 'DREX' })
+                return false
+            end
+        else
+            vim.notify(
+                'The provided sorting is not a `function`, fall back to default!',
+                vim.log.levels.ERROR,
+                { title = 'DREX' })
+            return false
+        end
+    end
+
+    return true
+end
+
 ---Private table to store custom user functions used in keybindings
 ---Only intended for internal usage within the DREX plugin
 M._fn = {}
@@ -124,40 +164,6 @@ M._fn = {}
 M.config = default_config
 
 ---Configure the global DREX settings
----
----Overwrite default option values:
----<pre>
----{
----    icons = {
----        dir_open = "+",
----        dir_closed = "-"
----    }
----}
----</pre>
----
----Add additional or overwrite existing default DREX keybindings:
----<pre>
----{
----    -- default keybindings options are { noremap = true, silent = true, nowait = true }
----    keybindings = {
----        ['n'] = {
----            ['R'] = '<cmd>lua require"drex.actions".rename()<CR>',
----            ['d'] = function() require('drex.actions').delete() end,
----        }
----    }
----}
----</pre>
----
----Setting a keybinding to `false` removes it:
----<pre>
----{
----    keybindings = {
----        ['n'] = {
----            ['d'] = false
----        }
----    }
----}
----</pre>
 ---@param user_config table User specific configuration.
 function M.configure(user_config)
     M.config = vim.tbl_deep_extend('force', default_config, user_config)
@@ -178,6 +184,11 @@ function M.configure(user_config)
     -- check for valid window_picker labels
     if not validate_window_picker_labels(M.config.drawer.window_picker.labels) then
         M.config.drawer.window_picker.labels = default_config.drawer.window_picker.labels
+    end
+
+    -- check for a valid sort function
+    if not validate_sorting(M.config.sorting) then
+        M.config.sorting = default_config.sorting
     end
 
     -- reset mapped functions

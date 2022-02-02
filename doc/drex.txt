@@ -133,6 +133,19 @@ However you may configure certain settings to your liking.
 			dir_closed = "",
 			file_default = "🗎",
 		},
+		sorting = function(a, b)
+			local aname, atype = a[1], a[2]
+			local bname, btype = b[1], b[2]
+
+			local aisdir = atype == 'directory'
+			local bisdir = btype == 'directory'
+
+			if aisdir ~= bisdir then
+				return aisdir
+			end
+
+			return aname < bname
+		end,
 		drawer = {
 			default_width = 30,
 			window_picker = {
@@ -209,6 +222,32 @@ Note: The `file_default` icon is used for all file elements in the case that
 Note: If you don't see the correct default icons here you need to install and
 configure a `NerdFont` (https://www.nerdfonts.com/). Or change them to another
 character.
+
+------------------------------------------------------------------------------
+SORTING                                           *drex-configuration-sorting*
+
+A function for sorting the elements within a DREX buffer. By default these are
+sorted directories first and otherwise alphabetically:
+>
+    sorting = function(a, b)
+        local aname, atype = a[1], a[2]
+        local bname, btype = b[1], b[2]
+
+        local aisdir = atype == 'directory'
+        local bisdir = btype == 'directory'
+
+        if aisdir ~= bisdir then
+            return aisdir
+        end
+
+        return aname < bname
+    end,
+<
+You can replace this function with any custom sorting logic that you prefer.
+
+Furthermore you can deactivate the custom sorting by just setting the value of
+`sorting` to `false`. In this case the items are just displayed as they are
+returned by `vim.loop.fs_scandir` (by default alphabetically).
 
 ------------------------------------------------------------------------------
 DRAWER                                             *drex-configuration-drawer*

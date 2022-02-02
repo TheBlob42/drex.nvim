@@ -239,7 +239,6 @@ function M.scan_directory(path, root_path)
         indentation = indentation .. string.rep('  ', count)
     end
 
-    local icons_loaded, icons = pcall(require, 'nvim-web-devicons')
     local content = {}
     while true do
         local name, type = luv.fs_scandir_next(data)
@@ -248,28 +247,21 @@ function M.scan_directory(path, root_path)
         table.insert(content, {name, type})
     end
 
-    table.sort(content, function (a, b)
-        local aname, atype = a[1], a[2]
-        local bname, btype = b[1], b[2]
+    if config.sorting then
+        table.sort(content, config.sorting)
+    end
 
-        local aisdir = atype == 'directory'
-        local bisdir = btype == 'directory'
-
-        if aisdir ~= bisdir then
-            return aisdir
-        end
-
-        return aname < bname
-    end)
-
-    for i=1,#content do
+    local icons_loaded, icons = pcall(require, 'nvim-web-devicons')
+    for i = 1, #content do
         local name, type = content[i][1], content[i][2]
         local icon = config.icons.file_default
+
         if type == 'directory' then
             icon = config.icons.dir_closed
         elseif icons_loaded then
             icon = icons.get_icon(name, vim.fn.fnamemodify(name, ':e'), { default = true })
         end
+
         content[i] = indentation .. icon .. ' ' .. path .. name
     end
 
