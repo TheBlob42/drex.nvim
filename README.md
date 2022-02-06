@@ -144,6 +144,7 @@ require('drex.config').configure {
         dir_closed = "",
         file_default = "🗎",
     },
+    hide_cursor = true,
     sorting = function(a, b)
         local aname, atype = a[1], a[2]
         local bname, btype = b[1], b[2]

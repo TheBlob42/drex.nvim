@@ -133,6 +133,7 @@ However you may configure certain settings to your liking.
 			dir_closed = "",
 			file_default = "🗎",
 		},
+		hide_cursor = true,
 		sorting = function(a, b)
 			local aname, atype = a[1], a[2]
 			local bname, btype = b[1], b[2]
@@ -223,6 +224,14 @@ Note: If you don't see the correct default icons here you need to install and
 configure a `NerdFont` (https://www.nerdfonts.com/). Or change them to another
 character.
 
+------------------------------------------------------------------------------
+CURSOR                                             *drex-configuration-cursor*
+
+Since the cursor is not very valuable within a DREX buffer it is hidden by
+default with a custom |guicursor| configuration.
+>
+	hide_cursor = true
+<
 ------------------------------------------------------------------------------
 SORTING                                           *drex-configuration-sorting*
 
