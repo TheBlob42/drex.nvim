@@ -132,6 +132,7 @@ function M.on_enter()
         setlocal cursorline        " make the selected line better visible
         setlocal conceallevel=3    " hide full path completely
         setlocal concealcursor=nvc " don't reveal full path on cursor
+        setlocal nospell           " spell checking is usually just annoying
     ]]
 
     if config.on_enter then
