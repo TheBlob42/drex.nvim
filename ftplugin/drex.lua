@@ -1,9 +1,7 @@
-require('drex.config').set_default_keybindings(0)
+local config = require('drex.config')
 
--- make sure that the cursor always stays in column 0 instead of jumping around on certain commands
-vim.api.nvim_exec([[
-    augroup DrexCursor
-        autocmd! * <buffer>
-        autocmd CursorMoved <buffer> normal! 0
-    augroup END
-]], false)
+config.set_default_keybindings(0)
+
+if config.config.hide_cursor then
+    require('drex.cursor').init()
+end

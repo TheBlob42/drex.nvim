@@ -10,6 +10,7 @@ DrexUnmark	drex.txt	/*DrexUnmark*
 drex-commands	drex.txt	/*drex-commands*
 drex-configuration	drex.txt	/*drex-configuration*
 drex-configuration-callbacks	drex.txt	/*drex-configuration-callbacks*
+drex-configuration-cursor	drex.txt	/*drex-configuration-cursor*
 drex-configuration-drawer	drex.txt	/*drex-configuration-drawer*
 drex-configuration-icons	drex.txt	/*drex-configuration-icons*
 drex-configuration-keybindings	drex.txt	/*drex-configuration-keybindings*
