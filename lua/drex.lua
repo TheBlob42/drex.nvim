@@ -530,11 +530,14 @@ function M.focus_element(win, path)
     utils.check_if_drex_buffer(buffer)
 
     local row = expand_path(buffer, path)
+    local visible = vim.fn.line('w0') <= row and row <= vim.fn.line('w$')
 
     -- set the cursor to the target row and center the view
     api.nvim_buf_set_option(buffer, 'modifiable', true)
     api.nvim_win_set_cursor(win, { row, 0 })
-    vim.fn.win_execute(win, 'normal zz')
+    if not visible then
+        vim.fn.win_execute(win, 'normal zz')
+    end
     api.nvim_buf_set_option(buffer, 'modifiable', false)
 end
 
