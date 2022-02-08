@@ -49,8 +49,8 @@ end
 ---- The `path` is not relative to the root path of `buffer`
 ---- The target element does not exist
 ---@param buffer number The target DREX buffer
----@param path string (Optional) Path of the target element (defaults to the current file)
----@return number row The (1-based) row of the target element
+---@param path string? Path of the target element (defaults to the current file)
+---@return number row The (1-based) row of the target element, `nil` when `path` could not be found
 local function expand_path(buffer, path)
     path = utils.expand_path(path or '%')
     local root_path = utils.get_root_path(buffer)
@@ -67,51 +67,26 @@ local function expand_path(buffer, path)
         error("'" .. path .. "' does not exist!", 0)
     end
 
-    local path_elements
-    local target_item
-    -- if path ends with a path separator it marks a directory
+    -- cut trailing path separator (e.g. '/') for directories
     if utils.ends_with(path, utils.path_separator) then
-        -- remove root_path and trailing path separator
-        local relative_path = path:sub(#root_path + 1, -2)
-        path_elements = vim.split(relative_path, utils.path_separator)
-
-        -- last path element is the target
-        -- remove it afterwards from the list
-        target_item = path_elements[#path_elements]
-        table.remove(path_elements, #path_elements)
-
-        -- needed or initiating the `next_path` variable would fail later on
-        if #path_elements == 0 then
-            path_elements = { '' }
-        end
-    else
-        local relative_path = path:match('^'..utils.escape(root_path)..'(.*)'..utils.path_separator..'.*$') or ''
-        path_elements = vim.split(relative_path, utils.path_separator)
-        target_item = path:match('^.*'..utils.path_separator..'(.+)$')
+        path = path:sub(1, -(#utils.path_separator + 1))
     end
 
     local row = 0
-    local path_index = 1
-    local next_path = root_path .. path_elements[path_index]
     while true do
         local line = api.nvim_buf_get_lines(buffer, row, row + 1, false)[1]
 
-        -- if `root_path` and next_path are equal we don't have to dig deeper into any sub-directory
-        -- otherwise check `path_index` against the length of `path_elements` to see if we need to "dig deeper"
-        if root_path ~= next_path and path_index <= #path_elements then
-            if utils.is_directory(line) then
-                if utils.get_element(line) == next_path then
-                    M.expand_element(buffer, row + 1) -- one-based
-                    path_index = path_index + 1
+        if not line then
+            return
+        end
 
-                    if path_index <= #path_elements then
-                        next_path = next_path .. utils.path_separator .. path_elements[path_index]
-                    end
-                end
-            end
-        else
-            if target_item == utils.get_name(line) then
-                return row + 1 -- 1-based row
+        if path == utils.get_element(line) then
+            return row + 1
+        end
+
+        if utils.starts_with(path, utils.get_element(line)) then
+            if utils.is_directory(line) then
+                M.expand_element(buffer, row + 1) -- one-based
             end
         end
 
