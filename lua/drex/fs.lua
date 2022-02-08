@@ -11,6 +11,7 @@ local config = require('drex.config').config
 ---- A function to "stop" a LUV event handler if it's not needed anymore
 ---- A table of post functions per buffer which should be executed once after the next path reload
 ---  - This is currently used for focusing an element after creation or renaming
+---- A timer to queue fs events for this `path`
 ---
 ---Furthermore there are some utility functions to ease the interaction with this special table:
 ---`_add_path`, `_remove_path`, `_add_buffer`, `_remove_buffer`
@@ -26,6 +27,7 @@ local config = require('drex.config').config
 ---    post_fn = {
 ---      [2] = function() focus_element() end,
 ---    },
+---    timer = vim.loop.new_timer(),
 ---  }
 ---}
 ---</pre>
@@ -65,6 +67,7 @@ connections._add_path = function(path, event_listener, ...)
             luv.fs_event_stop(event_listener)
         end,
         post_fn = {},
+        timer = luv.new_timer(),
     }
 end
 
@@ -126,65 +129,66 @@ function M.watch_directory(buffer, path)
             return
         end
 
-        -- we only care about 'rename' events
-        if not event.rename then
-            return
-        end
-
         -- path entry was already stopped and deleted
         if not connections[path] then
             return
         end
 
-        -- a 'rename' event is also send if a directory was deleted
-        if not luv.fs_access(path, 'r') then
-            -- reload all buffers that displayed `path` (all "parents")
-            local parent_path = vim.fn.fnamemodify(path, ':h:h') .. utils.path_separator
-
-            for buf, _ in pairs(connections[path].buffers) do
-                if utils.get_root_path(buf) == path then
-                    -- since the directory does not exists anymore delete the corresponding DREX buffer
-                    api.nvim_buf_delete(buf, { force = true })
-                else
-                    -- if the `parent_path` does still exist, reload the corresponding buffer
-                    if luv.fs_access(parent_path, 'r') then
-                        require('drex').reload_directory(buf, parent_path)
-                    end
-                end
-            end
-            connections._remove_path(path)
+        if connections[path].timer:get_due_in() > 0 then
             return
         end
 
-        for buf, _ in pairs(connections[path].buffers) do
-            if vim.fn.bufexists(buf) == 0 then
-                connections._remove_buffer(path, buffer)
-            else
-                -- reload `path` within buffer
-                require('drex').reload_directory(buf, path)
+        connections[path].timer:start(100, 0, vim.schedule_wrap(function()
+            -- a 'rename' event is also send if a directory was deleted
+            if event.rename and not luv.fs_access(path, 'r') then
+                -- reload all buffers that displayed `path` (all "parents")
+                local parent_path = vim.fn.fnamemodify(path, ':h:h') .. utils.path_separator
 
-                -- check if there is a saved post fn and execute it
-                if connections[path].post_fn[buf] then
-                    pcall(connections[path].post_fn[buf])
-                    connections[path].post_fn[buf] = nil
+                for buf, _ in pairs(connections[path].buffers) do
+                    if utils.get_root_path(buf) == path then
+                        -- since the directory does not exists anymore delete the corresponding DREX buffer
+                        api.nvim_buf_delete(buf, { force = true })
+                    else
+                        -- if the `parent_path` does still exist, reload the corresponding buffer
+                        if luv.fs_access(parent_path, 'r') then
+                            require('drex').reload_directory(buf, parent_path)
+                        end
+                    end
+                end
+                connections._remove_path(path)
+                return
+            end
+
+            for buf, _ in pairs(connections[path].buffers) do
+                if vim.fn.bufexists(buf) == 0 then
+                    connections._remove_buffer(path, buffer)
+                else
+                    -- reload `path` within buffer
+                    require('drex').reload_directory(buf, path)
+
+                    -- check if there is a saved post fn and execute it
+                    if connections[path].post_fn[buf] then
+                        pcall(connections[path].post_fn[buf])
+                        connections[path].post_fn[buf] = nil
+                    end
                 end
             end
-        end
 
-        -- check clipboard for elements that have been renamed deleted outside of Neovim
-        local clipboard = require('drex.actions').clipboard
-        for element, _ in pairs(clipboard) do
-            if utils.starts_with(element, path) then
-                if not luv.fs_access(element, 'r') then
-                    clipboard[element] = nil
+            -- check clipboard for elements that have been renamed or deleted outside of Neovim
+            local clipboard = require('drex.actions').clipboard
+            for element, _ in pairs(clipboard) do
+                if utils.starts_with(element, path) then
+                    if not luv.fs_access(element, 'r') then
+                        clipboard[element] = nil
+                    end
                 end
             end
-        end
 
-        -- if no buffers are connected anymore, remove the whole path
-        if vim.tbl_count(connections[path].buffers) == 0 then
-            connections._remove_path(path)
-        end
+            -- if no buffers are connected anymore, remove the whole path
+            if vim.tbl_count(connections[path].buffers) == 0 then
+                connections._remove_path(path)
+            end
+        end))
     end)
 
     luv.fs_event_start(event_listener, path, flags, event_callback)
