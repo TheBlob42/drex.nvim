@@ -85,7 +85,7 @@ local function expand_path(buffer, path)
         end
 
         if utils.starts_with(path, utils.get_element(line)) then
-            if utils.is_directory(line) then
+            if utils.is_closed_directory(line) then
                 M.expand_element(buffer, row + 1) -- one-based
             end
         end
