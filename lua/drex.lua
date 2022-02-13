@@ -72,6 +72,7 @@ local function expand_path(buffer, path)
         path = path:sub(1, -(#utils.path_separator + 1))
     end
 
+    local depth = select(2, path:gsub(utils.path_separator, ''))
     local row = 0
     while true do
         local line = api.nvim_buf_get_lines(buffer, row, row + 1, false)[1]
@@ -84,9 +85,15 @@ local function expand_path(buffer, path)
             return row + 1
         end
 
-        if utils.starts_with(path, utils.get_element(line)) then
+        local element = utils.get_element(line)
+        if utils.starts_with(path, element) then
             if utils.is_closed_directory(line) then
-                M.expand_element(buffer, row + 1) -- one-based
+                -- check if we're already reached the target element's depth
+                -- if so skip expanding directories (might start with the same chars)
+                local element_depth = select(2, element:gsub(utils.path_separator, ''))
+                if depth > element_depth then
+                    M.expand_element(buffer, row + 1) -- one-based
+                end
             end
         end
 
