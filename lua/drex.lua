@@ -401,7 +401,7 @@ function M.reload_directory(buffer, path)
             local lines = api.nvim_buf_get_lines(buffer, start_row, -1, false)
             for row, line in ipairs(lines) do
                 local element = utils.get_element(line)
-                if open_dirs[element] then
+                if open_dirs[element] and utils.is_directory(line) then
                     M.expand_element(buffer, row + start_row)
                     start_row = start_row + row
                     break
