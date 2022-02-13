@@ -145,16 +145,26 @@ function M.watch_directory(buffer, path)
                 local parent_path = vim.fn.fnamemodify(path, ':h:h') .. utils.path_separator
 
                 for buf, _ in pairs(connections[path].buffers) do
-                    if utils.get_root_path(buf) == path then
-                        -- since the directory does not exists anymore delete the corresponding DREX buffer
-                        api.nvim_buf_delete(buf, { force = true })
-                    else
-                        -- if the `parent_path` does still exist, reload the corresponding buffer
-                        if luv.fs_access(parent_path, 'r') then
-                            require('drex').reload_directory(buf, parent_path)
+                    if vim.fn.bufexists(buf) ~= 0 then
+                        if utils.get_root_path(buf) == path then
+                            -- since the directory does not exists anymore delete the corresponding DREX buffer
+                            api.nvim_buf_delete(buf, { force = true })
+                        else
+                            -- if the `parent_path` does still exist, reload the corresponding buffer
+                            if luv.fs_access(parent_path, 'r') then
+                                require('drex').reload_directory(buf, parent_path)
+                            end
                         end
                     end
                 end
+
+                local clipboard = require('drex.actions').clipboard
+                for element, _ in pairs(clipboard) do
+                    if utils.starts_with(element, path) then
+                        clipboard[element] = nil
+                    end
+                end
+
                 connections._remove_path(path)
                 return
             end
