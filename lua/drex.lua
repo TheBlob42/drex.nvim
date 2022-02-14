@@ -509,7 +509,8 @@ function M.open_file(pre, change_tab)
         vim.cmd(pre)
     end
 
-    vim.cmd(':e ' .. utils.get_element(line))
+    -- use `pcall` in case of a VIM error (e.g. file is already opened in another VIM instance - E325)
+    pcall(vim.cmd, ':e ' .. utils.get_element(line))
 end
 
 ---Find the element represented by `path` and set the cursor in `win` to the corresponding line
