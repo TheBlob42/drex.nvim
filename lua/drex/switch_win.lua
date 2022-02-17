@@ -15,7 +15,7 @@ vim.cmd [[
 local M = {}
 
 local api = vim.api
-local config = require('drex.config').config
+local config = require('drex.config')
 
 local letters = {
     ['a'] = {
@@ -236,7 +236,7 @@ function M.switch_window()
     local label_windows = {}
 
     for index, win in ipairs(target_windows) do
-        local label = config.drawer.window_picker.labels:sub(index, index)
+        local label = config.options.drawer.window_picker.labels:sub(index, index)
         local label_buffer = api.nvim_create_buf(false, true)
         api.nvim_buf_set_text(label_buffer, 0, 0, 0, 0, letters[label])
 

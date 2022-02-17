@@ -19,7 +19,7 @@ for element, _ in pairs(clipboard) do
     vim.cmd([[syntax match DrexMarked "]] .. esc(element) .. [[$" contains=DrexPath]])
 end
 
-local icons = require('drex.config').config.icons
+local icons = require('drex.config').options.icons
 -- syntax highlighting for directories to easier separate them from regular files
 vim.cmd('syntax region DrexDir start="' .. icons.dir_closed .. '" end="$" contains=DrexPath,DrexSelected,DrexMarked keepend')
 vim.cmd('syntax region DrexDir start="' .. icons.dir_open   .. '" end="$" contains=DrexPath,DrexSelected,DrexMarked keepend')

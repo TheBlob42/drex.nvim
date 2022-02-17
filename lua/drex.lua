@@ -5,7 +5,7 @@ local luv = vim.loop
 
 local fs = require('drex.fs')
 local utils = require('drex.utils')
-local config = require('drex.config').config
+local config = require('drex.config')
 
 -- ####################################
 -- ### local utility functions
@@ -117,8 +117,8 @@ function M.on_enter()
         setlocal nospell           " spell checking is usually just annoying
     ]]
 
-    if config.on_enter then
-        config.on_enter()
+    if config.options.on_enter then
+        config.options.on_enter()
     end
 
     vim.cmd("doautocmd Syntax") -- reload syntax
@@ -127,8 +127,8 @@ end
 ---Call custom logic when leaving a DREX buffer
 ---No need to call this function manually, there is an autocmd for it
 function M.on_leave()
-    if config.on_leave then
-        config.on_leave()
+    if config.options.on_leave then
+        config.options.on_leave()
     end
 end
 
@@ -216,7 +216,7 @@ function M.expand_element(buffer, row)
 
         api.nvim_buf_set_option(buffer, 'modifiable', true)
         vim.fn.appendbufline(buffer, row, sub_dir_content)
-        utils.set_icon(config.icons.dir_open, row, buffer)
+        utils.set_icon(config.options.icons.dir_open, row, buffer)
         api.nvim_buf_set_option(buffer, 'modifiable', false)
 
         fs.watch_directory(buffer, path)
@@ -297,7 +297,7 @@ function M.collapse_directory(buffer, row)
     if start_row ~= end_row then
         api.nvim_buf_set_lines(buffer, start_row, end_row, false, {})
     end
-    utils.set_icon(config.icons.dir_closed, start_row, buffer)
+    utils.set_icon(config.options.icons.dir_closed, start_row, buffer)
     api.nvim_win_set_cursor(0, { start_row, 0 })
     api.nvim_buf_set_option(buffer, 'modifiable', false)
 
@@ -484,7 +484,7 @@ function M.open_file(pre, change_tab)
     -- if used in drawer, switch to another window first
     local win = api.nvim_get_current_win()
     if win == require('drex.drawer').get_drawer_window() and not change_tab then
-        if config.drawer.window_picker.enabled then
+        if config.options.drawer.window_picker.enabled then
             if not require('drex.switch_win').switch_window() then
                 -- user has not chosen a valid window or aborted
                 return

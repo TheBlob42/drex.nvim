@@ -1,7 +1,7 @@
 local M = {}
 
 local api = vim.api
-local config = require('drex.config').config
+local config = require('drex.config')
 
 -- ###############################################
 -- ### string utility
@@ -136,21 +136,21 @@ end
 ---@return boolean
 function M.is_directory(line)
     local icon = M.get_icon(line)
-    return icon == config.icons.dir_open or icon == config.icons.dir_closed
+    return icon == config.options.icons.dir_open or icon == config.options.icons.dir_closed
 end
 
 ---Checks the configured directory icons to see if the element on `line` is an open directory
 ---@param line string The line to operate on
 ---@return boolean
 function M.is_open_directory(line)
-    return M.get_icon(line) == config.icons.dir_open
+    return M.get_icon(line) == config.options.icons.dir_open
 end
 
 ---Checks the configured directory icons to see of the element on `line` is a closed directory
 ---@param line string The line to operate on
 ---@return boolean
 function M.is_closed_directory(line)
-    return M.get_icon(line) == config.icons.dir_closed
+    return M.get_icon(line) == config.options.icons.dir_closed
 end
 
 ---Get the "visible" column width of `line`
