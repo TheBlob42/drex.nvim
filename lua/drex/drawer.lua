@@ -3,7 +3,7 @@ local M = {}
 local api = vim.api
 local drex = require('drex')
 local utils = require('drex.utils')
-local config = require('drex.config').config
+local config = require('drex.config')
 
 local drawer_widths = {}  -- save win width per tabpage
 local drawer_windows = {} -- save win id per tabpage
@@ -32,7 +32,7 @@ function M.open()
         -- set `winfixwidth` to prevent resizing on window deletion & balancing
         api.nvim_win_set_option(win, 'winfixwidth', true)
         -- resize drawer to saved width (for this tab) or default
-        local width = drawer_widths[tab] or config.drawer.default_width
+        local width = drawer_widths[tab] or config.options.drawer.default_width
         M.set_width(width, false, true)
 
         drex.open_directory_buffer('.')

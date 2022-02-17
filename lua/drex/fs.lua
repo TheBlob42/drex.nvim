@@ -3,7 +3,7 @@ local M = {}
 local api = vim.api
 local luv = vim.loop
 local utils = require('drex.utils')
-local config = require('drex.config').config
+local config = require('drex.config')
 
 ---Save the connections between "file system paths" which are being monitored by LUV and DREX buffers
 ---Each entry connects a `path` (key) with a table (value) which contains:
@@ -261,17 +261,17 @@ function M.scan_directory(path, root_path)
         table.insert(content, {name, type})
     end
 
-    if config.sorting then
-        table.sort(content, config.sorting)
+    if config.options.sorting then
+        table.sort(content, config.options.sorting)
     end
 
     local icons_loaded, icons = pcall(require, 'nvim-web-devicons')
     for i = 1, #content do
         local name, type = content[i][1], content[i][2]
-        local icon = config.icons.file_default
+        local icon = config.options.icons.file_default
 
         if type == 'directory' then
-            icon = config.icons.dir_closed
+            icon = config.options.icons.dir_closed
         elseif icons_loaded then
             icon = icons.get_icon(name, vim.fn.fnamemodify(name, ':e'), { default = true })
         end

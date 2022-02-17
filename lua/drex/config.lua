@@ -1,6 +1,6 @@
 local M = {}
 
-local default_config = {
+local defaults = {
     icons = {
         dir_open = "",
         dir_closed = "",
@@ -162,39 +162,39 @@ end
 ---Only intended for internal usage within the DREX plugin
 M._fn = {}
 
-M.config = default_config
+M.options = defaults
 
 ---Configure the global DREX settings
 ---@param user_config table User specific configuration.
 function M.configure(user_config)
-    M.config = vim.tbl_deep_extend('force', default_config, user_config)
+    M.options = vim.tbl_deep_extend('force', defaults, user_config)
 
     -- overwrite ALL default keybindings if requested
-    if M.config.disable_default_keybindings then
-        M.config.keybindings = user_config.keybindings
+    if M.options.disable_default_keybindings then
+        M.options.keybindings = user_config.keybindings
     end
 
     -- check for valid directory icons
-    if is_invalid_dir_icon('dir_open', M.config.icons.dir_open) then
-        M.config.icons.dir_open = default_config.icons.dir_open
+    if is_invalid_dir_icon('dir_open', M.options.icons.dir_open) then
+        M.options.icons.dir_open = defaults.icons.dir_open
     end
-    if is_invalid_dir_icon('dir_closed', M.config.icons.dir_closed) then
-        M.config.icons.dir_closed = default_config.icons.dir_closed
+    if is_invalid_dir_icon('dir_closed', M.options.icons.dir_closed) then
+        M.options.icons.dir_closed = defaults.icons.dir_closed
     end
 
     -- check for valid window_picker labels
-    if not validate_window_picker_labels(M.config.drawer.window_picker.labels) then
-        M.config.drawer.window_picker.labels = default_config.drawer.window_picker.labels
+    if not validate_window_picker_labels(M.options.drawer.window_picker.labels) then
+        M.options.drawer.window_picker.labels = defaults.drawer.window_picker.labels
     end
 
     -- check for a valid sort function
-    if not validate_sorting(M.config.sorting) then
-        M.config.sorting = default_config.sorting
+    if not validate_sorting(M.options.sorting) then
+        M.options.sorting = defaults.sorting
     end
 
     -- reset mapped functions
     M._fn = {}
-    for mode, bindings in pairs(M.config.keybindings) do
+    for mode, bindings in pairs(M.options.keybindings) do
         for lhs, rhs in pairs(bindings) do
             if type(rhs) == 'function' then
                 if not M._fn[mode] then
@@ -214,7 +214,7 @@ end
 function M.set_default_keybindings(buffer)
     local opts = { noremap = true, silent = true, nowait = true }
 
-    for mode, bindings in pairs(M.config.keybindings) do
+    for mode, bindings in pairs(M.options.keybindings) do
         for lhs, rhs in pairs(bindings) do
             -- check if `rhs` is truthy, users can set rhs to `false` to disable certain default bindings
             if rhs then
