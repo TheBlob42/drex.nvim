@@ -2,9 +2,12 @@ local M = {}
 
 local defaults = {
     icons = {
+        file_default = "",
+        -- icons which are not used by nvim-web-devicons
         dir_open = "",
         dir_closed = "",
-        file_default = "🗎",
+        link = "",
+        others = "",
     },
     hide_cursor = true,
     sorting = function(a, b)

@@ -272,6 +272,10 @@ function M.scan_directory(path, root_path)
 
         if type == 'directory' then
             icon = config.options.icons.dir_closed
+        elseif type == 'link' then
+            icon = config.options.icons.link
+        elseif type ~= 'file' then
+            icon = config.options.icons.others
         elseif icons_loaded then
             icon = icons.get_icon(name, vim.fn.fnamemodify(name, ':e'), { default = true })
         end
