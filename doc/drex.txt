@@ -349,6 +349,36 @@ Note: To set local window options (like |'number'| or |signcolumn|) use
 work as intended. See: https://github.com/neovim/neovim/issues/14670
 
 ==============================================================================
+HIGHLIGHT                                                     *drex-highlight*
+
+DREX uses the following highlight groups that you can configure to your
+personal preference:
+
+	*DrexDir*
+		The group used for directory elements.
+		By default this links to |hl-Directory|.
+
+	*DrexLink*
+		The group used for (symbolic) links.
+		By default this links to "Identifier" (see |hl-NvimIdentifier|).
+
+	*DrexOthers*
+		The group used for "other" elements (e.g. FIFO, socket).
+		By default this links to "SpecialChar" (see |hl-NvimStringSpecial|).
+
+	*DrexMarked*
+		The group used for for explicitly marked elements (contained in the
+		DREX clipboard).
+		By default this links to |hl-Substitute|.
+
+	*DrexSelected*
+		The group used for indirectly selected elements. Child elements of
+		marked directories (contained in the DREX clipboard) are highlighted
+		with this group to visualize that they would also be affected by
+		actions like move, delete etc.
+		By default this links to |hl-Visual|.
+
+==============================================================================
 CUSTOMIZATION                                             *drex-customization*
 
 If you miss a certain functionality or have a very specific use case, you can

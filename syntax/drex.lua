@@ -19,9 +19,12 @@ for element, _ in pairs(clipboard) do
     vim.cmd([[syntax match DrexMarked "]] .. esc(element) .. [[$" contains=DrexPath]])
 end
 
+-- syntax highlighting for different elements to separate them from regular files
 local icons = require('drex.config').options.icons
--- syntax highlighting for directories to easier separate them from regular files
-vim.cmd('syntax region DrexDir start="' .. icons.dir_closed .. '" end="$" contains=DrexPath,DrexSelected,DrexMarked keepend')
-vim.cmd('syntax region DrexDir start="' .. icons.dir_open   .. '" end="$" contains=DrexPath,DrexSelected,DrexMarked keepend')
+local syntax = 'syntax region %s start="%s" end="$" contains=DrexPath,DrexSelected,DrexMarked keepend'
+vim.cmd(syntax:format('DrexDir', icons.dir_closed))
+vim.cmd(syntax:format('DrexDir', icons.dir_open))
+vim.cmd(syntax:format('DrexLink', icons.link))
+vim.cmd(syntax:format('DrexOthers', icons.others))
 
 vim.b.current_syntax = 'drex'

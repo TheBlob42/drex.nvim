@@ -1,10 +1,15 @@
 Drex	drex.txt	/*Drex*
+DrexDir	drex.txt	/*DrexDir*
 DrexDrawerClose	drex.txt	/*DrexDrawerClose*
 DrexDrawerFindFile	drex.txt	/*DrexDrawerFindFile*
 DrexDrawerFindFileAndFocus	drex.txt	/*DrexDrawerFindFileAndFocus*
 DrexDrawerOpen	drex.txt	/*DrexDrawerOpen*
 DrexDrawerToggle	drex.txt	/*DrexDrawerToggle*
+DrexLink	drex.txt	/*DrexLink*
 DrexMark	drex.txt	/*DrexMark*
+DrexMarked	drex.txt	/*DrexMarked*
+DrexOthers	drex.txt	/*DrexOthers*
+DrexSelected	drex.txt	/*DrexSelected*
 DrexToggle	drex.txt	/*DrexToggle*
 DrexUnmark	drex.txt	/*DrexUnmark*
 drex-commands	drex.txt	/*drex-commands*
@@ -19,6 +24,7 @@ drex-customization	drex.txt	/*drex-customization*
 drex-default-configuration	drex.txt	/*drex-default-configuration*
 drex-default-keybindings	drex.txt	/*drex-default-keybindings*
 drex-features	drex.txt	/*drex-features*
+drex-highlight	drex.txt	/*drex-highlight*
 drex-installation	drex.txt	/*drex-installation*
 drex-usage	drex.txt	/*drex-usage*
 drex-window-picker	drex.txt	/*drex-window-picker*

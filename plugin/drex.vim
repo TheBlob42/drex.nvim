@@ -11,8 +11,10 @@ command! -range DrexMark lua require('drex.actions').mark(<line1>, <line2>)
 command! -range DrexUnmark lua require('drex.actions').unmark(<line1>, <line2>)
 command! -range DrexToggle lua require('drex.actions').toggle(<line1>, <line2>)
 
-highlight default link DrexDir Directory     " differentiate directories from regular files
-highlight default link DrexMarked Substitute " explicitly marked elements
-highlight default link DrexSelected Visual   " highlighting for indirectly selected items
+highlight default link DrexDir Directory      " differentiate directories elements
+highlight default link DrexLink Identifier    " differentiate link elements
+highlight default link DrexOthers SpecialChar " differentiate other elements (fifo, socket, etc.)
+highlight default link DrexMarked Substitute  " explicitly marked elements
+highlight default link DrexSelected Visual    " highlighting for indirectly selected items
 
 let g:loaded_drex = 1
