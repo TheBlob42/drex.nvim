@@ -140,9 +140,11 @@ Check out the default configuration:
 ```lua
 require('drex.config').configure {
     icons = {
+        file_default = "",
         dir_open = "",
         dir_closed = "",
-        file_default = "🗎",
+        link = "",
+        others = "",
     },
     hide_cursor = true,
     sorting = function(a, b)
