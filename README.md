@@ -108,7 +108,7 @@ DREX also comes with a simple project drawer functionality
 
 - `s` shows the stats for the current element
 - `a` creates a new file or directory
-  - to create a new directory end your input with a `/`
+  - to create a new directory end your input with a `/` (`\` on Windows)
   - non-existent parent directories will be created
     (e.g. `foo/bar/file` will create `foo` and `bar` if they don't exist yet)
 - `d` deletes the element under the cursor (or the visual selection)
