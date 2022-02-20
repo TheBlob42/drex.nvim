@@ -129,9 +129,11 @@ However you may configure certain settings to your liking.
 >
     require('drex.config').configure {
 		icons = {
+			file_default = "",
 			dir_open = "",
 			dir_closed = "",
-			file_default = "🗎",
+			link = "",
+			others = "",
 		},
 		hide_cursor = true,
 		sorting = function(a, b)
@@ -211,14 +213,24 @@ ICONS                                               *drex-configuration-icons*
 Icons are used for the user as a help to quickly identify an element as well as
 for DREX to differentiate between them:
 >
- 	icons = {
-		dir_open = "",
-		dir_closed = "",
-		file_default = "🗎",
+	icons = {
+        file_default = "",
+        dir_open = "",
+        dir_closed = "",
+        link = "",
+        others = "",
 	}
 <
-Note: The `file_default` icon is used for all file elements in the case that 
-`nvim-web-devicons` is not installed.
+- `file_default	`Used for file elements in case `nvim-web-devicons` is not
+				installed. No special highlighting
+- `dir_open`	A directory element with an expanded subtree
+				Highlighted with |DrexDir|
+- `dir_closed`	A directory element without expanded subtree
+				Highlighted with |DrexDir|
+- `link`		A (sym)link element
+				Highlighted with |DrexLink|
+- `others`		A non-file non-directory non-link element (FIFO, socket, etc.)
+				Highlighted with |DrexOthers|
 
 Note: If you don't see the correct default icons here you need to install and
 configure a `NerdFont` (https://www.nerdfonts.com/). Or change them to another
