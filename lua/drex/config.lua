@@ -93,21 +93,20 @@ local defaults = {
     on_leave = nil,
 }
 
----Helper function to check for valid directory icons
----This is important as these icons are used by utility functions to extract and set several options
----@param name string Name used for error message
----@param value string Value which should be checked
----@return boolean invalid `true` if there is a problem with the given `value`, `false` otherwise
-local function is_invalid_dir_icon(name, value)
+---Helper function to check for valid icons
+---Important as icons are used by utility functions for extracting and setting options
+---@param name string Name of the icon element (for logging)
+---@param value string Value to check
+---@return boolean
+local function validate_icon(name, value)
     if not value or #value == 0 or value:find('[ /\\]') then
         vim.notify(
-            "Invalid icon value for '" .. name .. "': '" .. value .. "'! Icon has to be set, can not be blank and must not contain ' ', '/' or '\\' characters!",
+            "Invalid icon value for '" .. name .. "': '" .. value .. "' icon has to be non-nil, can not be blank and must not contain ' ', '/' or '\\' characters!",
             vim.log.levels.ERROR,
-            { title = 'DREX' }
-        )
-        return true
+            { title = 'DREX' })
+        return false
     end
-    return false
+    return true
 end
 
 ---Helper function to check for supported `window_picker` labels
@@ -177,12 +176,21 @@ function M.configure(user_config)
         M.options.keybindings = user_config.keybindings
     end
 
-    -- check for valid directory icons
-    if is_invalid_dir_icon('dir_open', M.options.icons.dir_open) then
+    -- check for valid icons
+    if not validate_icon('file_default', M.options.icons.file_default) then
+        M.options.icons.file_default = defaults.icons.file_default
+    end
+    if not validate_icon('dir_open', M.options.icons.dir_open) then
         M.options.icons.dir_open = defaults.icons.dir_open
     end
-    if is_invalid_dir_icon('dir_closed', M.options.icons.dir_closed) then
+    if not validate_icon('dir_closed', M.options.icons.dir_closed) then
         M.options.icons.dir_closed = defaults.icons.dir_closed
+    end
+    if not validate_icon('link', M.options.icons.link) then
+        M.options.icons.link = defaults.icons.link
+    end
+    if not validate_icon('others', M.options.icons.others) then
+        M.options.icons.others = defaults.icons.others
     end
 
     -- check for valid window_picker labels
