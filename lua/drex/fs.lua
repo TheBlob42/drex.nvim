@@ -188,7 +188,7 @@ function M.watch_directory(buffer, path)
             local clipboard = require('drex.actions').clipboard
             for element, _ in pairs(clipboard) do
                 if utils.starts_with(element, path) then
-                    if not luv.fs_access(element, 'r') then
+                    if not luv.fs_lstat(element) then
                         clipboard[element] = nil
                     end
                 end
