@@ -161,10 +161,6 @@ local function validate_sorting(sorting)
     return true
 end
 
----Private table to store custom user functions used in keybindings
----Only intended for internal usage within the DREX plugin
-M._fn = {}
-
 M.options = defaults
 
 ---Configure the global DREX settings
@@ -203,20 +199,6 @@ function M.configure(user_config)
     if not validate_sorting(M.options.sorting) then
         M.options.sorting = defaults.sorting
     end
-
-    -- reset mapped functions
-    M._fn = {}
-    for mode, bindings in pairs(M.options.keybindings) do
-        for lhs, rhs in pairs(bindings) do
-            if type(rhs) == 'function' then
-                if not M._fn[mode] then
-                    M._fn[mode] = {}
-                end
-
-                M._fn[mode][lhs] = rhs
-            end
-        end
-    end
 end
 
 ---Set all default keybindings for the given DREX buffer
@@ -231,9 +213,8 @@ function M.set_default_keybindings(buffer)
             -- check if `rhs` is truthy, users can set rhs to `false` to disable certain default bindings
             if rhs then
                 if type(rhs) == 'function' then
-                    -- call custom function from the `M._fn` table
                     rhs = string.format(
-                        ":lua require('drex.config')._fn['%s']['%s']()<CR>",
+                        ":lua require('drex.config').options.keybindings['%s']['%s']()<CR>",
                         mode,
                         lhs:gsub('<', '<lt>') -- escape keycodes like '<CR>', '<Esc>', etc.
                     )
