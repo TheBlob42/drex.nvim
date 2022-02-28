@@ -10,6 +10,7 @@ local defaults = {
         others = "",
     },
     hide_cursor = true,
+    hijack_netrw = false,
     sorting = function(a, b)
         local aname, atype = a[1], a[2]
         local bname, btype = b[1], b[2]

@@ -136,6 +136,7 @@ However you may configure certain settings to your liking.
 			others = "",
 		},
 		hide_cursor = true,
+		hijack_netrw = false,
 		sorting = function(a, b)
 			local aname, atype = a[1], a[2]
 			local bname, btype = b[1], b[2]
@@ -244,6 +245,19 @@ default with a custom |guicursor| configuration.
 >
 	hide_cursor = true
 <
+------------------------------------------------------------------------------
+HIJACK NETRW                                        *drex-configuration-netrw*
+
+Opt-in feature to use DREX as the default directory explorer in Neovim instead
+of |netrw|. This affects for example |edit| (e.g. `:edit /home/user/`) and/or
+directories passed as command line arguments (e.g. `nvim /home/user/`).
+>
+	hijack_netrw = false
+<
+Set this option to `true` to activate it.
+
+Note: This will not affect the |netrw-explore| commands
+
 ------------------------------------------------------------------------------
 SORTING                                           *drex-configuration-sorting*
 
