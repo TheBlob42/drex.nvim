@@ -11,6 +11,13 @@ command! -range DrexMark lua require('drex.actions').mark(<line1>, <line2>)
 command! -range DrexUnmark lua require('drex.actions').unmark(<line1>, <line2>)
 command! -range DrexToggle lua require('drex.actions').toggle(<line1>, <line2>)
 
+lua << EOF
+-- hijack netrw and use DREX instead
+if require('drex.config').options.hijack_netrw then
+    require('drex.netrw').init()
+end
+EOF
+
 highlight default link DrexDir Directory      " differentiate directories elements
 highlight default link DrexLink Identifier    " differentiate link elements
 highlight default link DrexOthers SpecialChar " differentiate other elements (fifo, socket, etc.)
