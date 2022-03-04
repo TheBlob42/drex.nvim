@@ -11,6 +11,9 @@ command! -range DrexMark lua require('drex.actions').mark(<line1>, <line2>)
 command! -range DrexUnmark lua require('drex.actions').unmark(<line1>, <line2>)
 command! -range DrexToggle lua require('drex.actions').toggle(<line1>, <line2>)
 
+autocmd SessionLoadPost drex://* ++nested lua
+    \ require('drex').open_directory_buffer(require('drex.utils').get_root_path())
+
 lua << EOF
 -- hijack netrw and use DREX instead
 if require('drex.config').options.hijack_netrw then
