@@ -584,7 +584,7 @@ local function rename_element(old_element, new_element)
     local second_try = false
     ::rename::
     local new_element_stats = luv.fs_lstat(new_element)
-    local element_name = new_element:match('.*'..utils.path_separator..'(.*)$')
+    local element_name = new_element:match('.*'..utils.path_separator..'([^'..utils.path_separator..']+)'..utils.path_separator..'?$')
     local parent_path = new_element:sub(1, #new_element - #element_name - 1)
 
     -- `fs_rename` does not fail on existing files and would just overwrite them, so we have to check manually
@@ -610,6 +610,15 @@ local function rename_element(old_element, new_element)
 
     local success, error = luv.fs_rename(old_element, new_element)
     if success then
+        -- if renaming a directory attach the path separator to make sure buffer renaming is working correctly
+        if old_element_stats.type == 'directory' then
+            if not utils.ends_with(old_element, utils.path_separator) then
+                old_element = old_element .. utils.path_separator
+            end
+            if not utils.ends_with(new_element, utils.path_separator) then
+                new_element = new_element .. utils.path_separator
+            end
+        end
         rename_loaded_buffers(old_element, new_element)
         return new_element, nil
     elseif not second_try then
@@ -887,7 +896,7 @@ end
 function M.rename()
     local old_element = utils.get_element(api.nvim_get_current_line())
     local old_element_stats = luv.fs_lstat(old_element)
-    local status_ok, new_element = pcall(vim.fn.input, 'Rename '..old_element_stats.type..': ', old_element)
+    local status_ok, new_element = pcall(vim.fn.input, 'Rename '..old_element_stats.type..': ', old_element, 'file')
 
     if not status_ok or new_element == '' then
         return
@@ -916,7 +925,7 @@ function M.rename()
                 focus_fn()
             end
         end
-    else
+    elseif error then
         vim.notify("Could not rename '" .. old_element .. "':\n" .. error, vim.log.levels.ERROR, { title = 'DREX' })
     end
 end
