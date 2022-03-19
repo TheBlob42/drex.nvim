@@ -222,6 +222,8 @@ require('drex.config').configure {
 
 Check out `:help drex-configuration` for more details about the individual options
 
+See also the wiki pages about [configuration](https://github.com/TheBlob42/drex.nvim/wiki/Configuration) and [custom actions](https://github.com/TheBlob42/drex.nvim/wiki/Custom-Actions) for more information
+
 ## Internals
 
 Like [vim-dirvish](https://github.com/justinmk/vim-dirvish) every line is just a file path hidden via `conceal` (plus indentation and an icon). For file system scanning, file interactions (add, delete, rename, etc.) and monitoring DREX uses [libuv](https://github.com/libuv/libuv) which is exposed via `vim.loop`
