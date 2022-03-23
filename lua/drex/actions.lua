@@ -922,7 +922,12 @@ function M.rename()
                 api.nvim_get_current_buf(),
                 focus_fn)
             then
-                focus_fn()
+                if not fs.post_next_reload(
+                    vim.fn.fnamemodify(old_element, ':h') .. utils.path_separator,
+                    api.nvim_get_current_buf(),
+                    focus_fn) then
+                    focus_fn()
+                end
             end
         end
     elseif error then
