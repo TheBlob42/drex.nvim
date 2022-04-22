@@ -27,4 +27,13 @@ vim.cmd(syntax:format('DrexDir', icons.dir_open))
 vim.cmd(syntax:format('DrexLink', icons.link))
 vim.cmd(syntax:format('DrexOthers', icons.others))
 
+if require('drex.config').options.colored_icons then
+    local dev_icons_ok, dev_icons = pcall(require, 'nvim-web-devicons')
+    if dev_icons_ok then
+        for _, icon in pairs(dev_icons.get_icons()) do
+            vim.cmd('syntax match DevIcon' .. icon.name .. ' "' .. icon.icon .. '"')
+        end
+    end
+end
+
 vim.b.current_syntax = 'drex'

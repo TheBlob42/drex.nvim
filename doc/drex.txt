@@ -135,6 +135,7 @@ However you may configure certain settings to your liking.
 			link = "",
 			others = "",
 		},
+		colored_icons = true,
 		hide_cursor = true,
 		hijack_netrw = false,
 		sorting = function(a, b)
@@ -221,7 +222,10 @@ for DREX to differentiate between them:
         link = "",
         others = "",
 	}
+	colored_icons = true,
 <
+Icons~
+
 - `file_default	`Used for file elements in case `nvim-web-devicons` is not
 				installed. No special highlighting
 - `dir_open`	A directory element with an expanded subtree
@@ -236,6 +240,17 @@ for DREX to differentiate between them:
 Note: If you don't see the correct default icons here you need to install and
 configure a `NerdFont` (https://www.nerdfonts.com/). Or change them to another
 character.
+
+Colored Icons~
+
+Highlight the `nvim-web-devicons` used for file types in their respective
+colors. See for example `:hi DevIconC`, `:hi DevIconVim`, etc.
+
+If you don't like colorful icons and/or prefer a more "monochromatic" look set
+this options to `false`.
+
+Note: If you have the `nvim-web-devicons` plugin not installed, this options
+does not do anything.
 
 ------------------------------------------------------------------------------
 CURSOR                                             *drex-configuration-cursor*

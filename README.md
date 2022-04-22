@@ -146,6 +146,7 @@ require('drex.config').configure {
         link = "",
         others = "",
     },
+    colored_icons = true,
     hide_cursor = true,
     hijack_netrw = false,
     sorting = function(a, b)

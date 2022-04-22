@@ -9,6 +9,7 @@ local defaults = {
         link = "",
         others = "",
     },
+    colored_icons = true,
     hide_cursor = true,
     hijack_netrw = false,
     sorting = function(a, b)
