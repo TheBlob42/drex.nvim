@@ -360,6 +360,11 @@ function M.reload_directory(buffer, path)
         end
     end
 
+    -- path was not found in the given buffer
+    if not start_row then
+        return
+    end
+
     -- either `path` is the root path of `buffer`
     -- or the last line of `buffer` belongs to the sub-directory's content
     if not end_row then
