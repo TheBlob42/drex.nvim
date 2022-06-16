@@ -937,8 +937,9 @@ end
 
 ---Create a new element (file or directory)
 ---Nonexistent directories of the new path will be created as well
-function M.create()
-    local dest_path = get_destination_path()
+---@param dest_path string? (Optional) Path of the newly created element, if not provided use the element under the cursor
+function M.create(dest_path)
+    local dest_path = dest_path or get_destination_path()
     if not dest_path then
         return
     end
