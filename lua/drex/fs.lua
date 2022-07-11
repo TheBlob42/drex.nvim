@@ -160,7 +160,7 @@ function M.watch_directory(buffer, path)
 
                 local clipboard = require('drex.actions').clipboard
                 for element, _ in pairs(clipboard) do
-                    if utils.starts_with(element, path) then
+                    if vim.startswith(element, path) then
                         clipboard[element] = nil
                     end
                 end
@@ -187,7 +187,7 @@ function M.watch_directory(buffer, path)
             -- check clipboard for elements that have been renamed or deleted outside of Neovim
             local clipboard = require('drex.actions').clipboard
             for element, _ in pairs(clipboard) do
-                if utils.starts_with(element, path) then
+                if vim.startswith(element, path) then
                     if not luv.fs_lstat(element) then
                         clipboard[element] = nil
                     end
@@ -213,7 +213,7 @@ function M.unwatch_directory(buffer, path)
     end
 
     for p, _ in pairs(connections) do
-        if utils.starts_with(p, path) then -- check all sub-paths as well
+        if vim.startswith(p, path) then -- check all sub-paths as well
             connections._remove_buffer(p, buffer)
 
             -- if no buffers are connected anymore, remove the whole path
@@ -248,7 +248,7 @@ function M.scan_directory(path, root_path)
     -- if given a `root_path` calculate the needed indentation
     local indentation = '  '
     if root_path and path ~= root_path then
-        local relative_path = path:gsub('^' .. utils.escape(root_path), '')
+        local relative_path = path:gsub('^' .. vim.pesc(root_path), '')
         local _, count = relative_path:gsub(utils.path_separator, '')
         indentation = indentation .. string.rep('  ', count)
     end
