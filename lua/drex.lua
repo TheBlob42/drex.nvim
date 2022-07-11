@@ -59,7 +59,7 @@ local function expand_path(buffer, path)
         error("The given path '" .. path .. "' is equal to the buffers root path!", 0)
     end
 
-    if not utils.starts_with(path, root_path) then
+    if not vim.startswith(path, root_path) then
         error("Can not find '" .. path .. "'! Wrong root path ('" .. root_path .. "').", 0)
     end
 
@@ -68,7 +68,7 @@ local function expand_path(buffer, path)
     end
 
     -- cut trailing path separator (e.g. '/') for directories
-    if utils.ends_with(path, utils.path_separator) then
+    if vim.endswith(path, utils.path_separator) then
         path = path:sub(1, -(#utils.path_separator + 1))
     end
 
@@ -85,7 +85,7 @@ local function expand_path(buffer, path)
         end
 
         local element = utils.get_element(line)
-        if utils.starts_with(path, element .. utils.path_separator) then
+        if vim.startswith(path, element .. utils.path_separator) then
             if utils.is_closed_directory(line) then
                 M.expand_element(buffer, row + 1) -- one-based
             end
@@ -263,7 +263,7 @@ function M.collapse_directory(buffer, row)
     if not start_row then
         for r = row, 0, -1 do
             local tmpLine = buffer_lines[r]
-            if utils.starts_with(path, utils.get_element(tmpLine)) then
+            if vim.startswith(path, utils.get_element(tmpLine)) then
                 start_row = r
                 break
             end
@@ -273,7 +273,7 @@ function M.collapse_directory(buffer, row)
     -- find the last "content row" of the directory to collapse
     for r = row + 1, #buffer_lines, 1 do
         local tmpLine = buffer_lines[r]
-        if not utils.starts_with(utils.get_path(tmpLine), path) then
+        if not vim.startswith(utils.get_path(tmpLine), path) then
             -- r is the first row not belonging to the collapsing directory
             -- therefore we save the previous row as 'end_row'
             end_row = r - 1
@@ -349,7 +349,7 @@ function M.reload_directory(buffer, path)
         elseif start_row then
             local line_path = utils.get_path(line)
 
-            if not utils.starts_with(line_path, path) then
+            if not vim.startswith(line_path, path) then
                 end_row = row - 1
                 break
             end
@@ -414,7 +414,7 @@ function M.reload_directory(buffer, path)
                 end
 
                 -- outside of given path
-                if not utils.starts_with(element, path) then
+                if not vim.startswith(element, path) then
                     progress = false
                     break
                 end
