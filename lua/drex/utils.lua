@@ -7,50 +7,11 @@ local config = require('drex.config')
 -- ### string utility
 -- ###############################################
 
----Check if the given `str` starts with `start`
----@param str string
----@param start string
----@return boolean
-function M.starts_with(str, start)
-    return str:sub(1, #start) == start
-end
-
----Check if the given `str` ends with `ending`
----@param str string
----@param ending string
----@return boolean
-function M.ends_with(str, ending)
-    return ending == "" or str:sub(-#ending) == ending
-end
-
----Escape `str` for the usage in Lua pattern matching
----@param str string String to escape
----@return string
-function M.escape(str)
-    return (str:gsub('%%', '%%%%')
-               :gsub('^%^', '%%^')
-               :gsub('%$$', '%%$')
-               :gsub('%(', '%%(')
-               :gsub('%)', '%%)')
-               :gsub('%.', '%%.')
-               :gsub('%[', '%%[')
-               :gsub('%]', '%%]')
-               :gsub('%*', '%%*')
-               :gsub('%+', '%%+')
-               :gsub('%-', '%%-')
-               :gsub('%?', '%%?'))
-end
-
 ---Escape `str` for the usage in a VIM regex
 ---@param str string String to escape
 ---@return string
 function M.vim_escape(str)
-    return str:gsub('\\', '\\\\')
-              :gsub('~', '\\~')
-              :gsub('*', '\\*')
-              :gsub('%[', '\\[')
-              :gsub('%]', '\\]')
-              :gsub('%.', '\\.')
+    return vim.fn.escape(str, '^$.*~?/\\[]')
 end
 
 -- ###############################################

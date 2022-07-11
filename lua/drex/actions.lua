@@ -214,8 +214,8 @@ function M.open_clipboard_window()
         local buf_elements = {}
 
         for _, element in ipairs(api.nvim_buf_get_lines(buffer, 0, -1, false)) do
-            if element ~= '' and not utils.starts_with(element, '#') then
-                if utils.ends_with(element, utils.path_separator) then
+            if element ~= '' and not vim.startswith(element, '#') then
+                if vim.endswith(element, utils.path_separator) then
                     -- remove trailing path separator for directories
                     element = element:sub(1, #element - 1)
                 end
@@ -455,7 +455,7 @@ local function copy_element(source_element, target_element, force)
     local success, mkdir_error = luv.fs_mkdir(target_element, source_element_stats.mode)
     if not success then
         -- do not abort if the new directory already exists
-        if not utils.starts_with(mkdir_error, 'EEXIST') then
+        if not vim.startswith(mkdir_error, 'EEXIST') then
             return nil, {}, { mkdir_error }
         end
     end
@@ -492,8 +492,8 @@ local function rename_loaded_buffers(old_name, new_name)
     for _, buf in ipairs(api.nvim_list_bufs()) do
         if api.nvim_buf_is_loaded(buf) then
             local buf_name = api.nvim_buf_get_name(buf)
-            if utils.starts_with(buf_name, old_name) then
-                local new_buf_name = buf_name:gsub(utils.escape(old_name), new_name)
+            if vim.startswith(buf_name, old_name) then
+                local new_buf_name = buf_name:gsub(vim.pesc(old_name), new_name)
                 api.nvim_buf_set_name(buf, new_buf_name)
                 api.nvim_buf_call(buf, function()
                     vim.cmd('silent! w!')  -- avoid 'overwrite existing file' error
@@ -548,7 +548,7 @@ local function create_directories(path)
         -- the first nonexistent part of `path` was created
         if not existing_path and success then
             existing_path = parent_path
-            created_path = path:gsub(utils.escape(parent_path), '', 1)
+            created_path = path:gsub(vim.pesc(parent_path), '', 1)
         end
     end
 
@@ -612,10 +612,10 @@ local function rename_element(old_element, new_element)
     if success then
         -- if renaming a directory attach the path separator to make sure buffer renaming is working correctly
         if old_element_stats.type == 'directory' then
-            if not utils.ends_with(old_element, utils.path_separator) then
+            if not vim.endswith(old_element, utils.path_separator) then
                 old_element = old_element .. utils.path_separator
             end
-            if not utils.ends_with(new_element, utils.path_separator) then
+            if not vim.endswith(new_element, utils.path_separator) then
                 new_element = new_element .. utils.path_separator
             end
         end
@@ -623,13 +623,13 @@ local function rename_element(old_element, new_element)
         return new_element, nil
     elseif not second_try then
         local action = 0
-        if utils.starts_with(error, 'ENOTDIR') or utils.starts_with(error, 'EISDIR') then
+        if vim.startswith(error, 'ENOTDIR') or vim.startswith(error, 'EISDIR') then
             action = vim.fn.confirm(
                 confirm_msg:format(new_element_stats.type, element_name, parent_path, old_element_stats.type),
                 '&Yes\n&No\n&Rename',
                 2
             )
-        elseif utils.starts_with(error, 'ENOTEMPTY') then
+        elseif vim.startswith(error, 'ENOTEMPTY') then
             action = vim.fn.confirm(
                 -- clarify that it's NOT a merge but an overwrite (old data will be lost)
                 confirm_msg:format(new_element_stats.type, element_name, parent_path, old_element_stats.type) .. ' (This is NOT a merge!)',
@@ -818,7 +818,7 @@ function M.multi_rename(mode)
 
     buffer_autocmds[buffer] = function()
         local buf_elements = vim.tbl_filter(
-            function(line) return not utils.starts_with(line, "#") end, -- filter out comment lines
+            function(line) return not vim.startswith(line, "#") end, -- filter out comment lines
             api.nvim_buf_get_lines(buffer, 0, -1, false))
 
         if table.concat(elements) ~= table.concat(buf_elements) then
@@ -913,7 +913,7 @@ function M.rename()
         end
 
         -- if the renamed element is in scope of the current DREX buffer, focus it
-        if utils.starts_with(new_element, utils.get_root_path(0)) then
+        if vim.startswith(new_element, utils.get_root_path(0)) then
             local window = api.nvim_get_current_win()
             local focus_fn = function() require('drex').focus_element(window, new_element) end
 
@@ -977,7 +977,7 @@ function M.create(dest_path)
     local existing_base_path = create_directories(user_input)[1]
 
     -- check if only directories should be created
-    if not utils.ends_with(user_input, utils.path_separator) then
+    if not vim.endswith(user_input, utils.path_separator) then
         local mode = luv.constants.O_CREAT + luv.constants.O_WRONLY + luv.constants.O_TRUNC
         local fd, error = luv.fs_open(user_input, 'w', mode)
         if error then
@@ -992,7 +992,7 @@ function M.create(dest_path)
     end
 
     -- if the newly created element is in scope of the current DREX buffer, focus it
-    if utils.starts_with(new_element, utils.get_root_path(0)) then
+    if vim.startswith(new_element, utils.get_root_path(0)) then
         local window = api.nvim_get_current_win()
         local focus_fn = function() require('drex').focus_element(window, new_element) end
 
@@ -1084,7 +1084,7 @@ function M.delete(mode)
         -- delete corresponding (and loaded) buffer
         for _, buf in ipairs(api.nvim_list_bufs()) do
             if api.nvim_buf_is_loaded(buf) then
-                if utils.starts_with(api.nvim_buf_get_name(buf), element) then
+                if vim.startswith(api.nvim_buf_get_name(buf), element) then
                     api.nvim_buf_delete(buf, { force = true })
                 end
             end
@@ -1239,7 +1239,7 @@ function M.copy_element_relative_path(selection)
     copy_element_strings(selection, function(str)
         local name = utils.get_name(str)
         local path = utils.get_path(str)
-        local rel_path = path:gsub(utils.escape(root_path), '')
+        local rel_path = path:gsub(vim.pesc(root_path), '')
         return rel_path .. name
     end)
 end
