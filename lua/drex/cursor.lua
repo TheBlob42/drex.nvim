@@ -1,32 +1,32 @@
-local M = {}
-
 local saved_guicursor = vim.opt.guicursor:get()
 local saved_cursorlineopt = vim.opt.cursorlineopt:get()
 
--- need to set some 'gui' option or 'blend' will not work (at least in gnome-terminal)
-vim.cmd('highlight DrexTransparentCursor gui=reverse blend=100')
+---Create the "transparent" cursor highlight
+local function set_cursor_hl()
+    vim.api.nvim_set_hl(0, 'DrexTransparentCursor', {
+        reverse = true, -- need to set some "gui" option or 'blend' will not work (at least in gnome-terminal)
+        blend = 100,
+    })
+end
+
+set_cursor_hl()
+
+vim.api.nvim_create_autocmd('ColorScheme', {
+    desc = 'Recreate the "transparent" DREX cursor highlight',
+    pattern = '*',
+    callback = set_cursor_hl,
+})
 
 local function is_drex_buffer()
     return vim.api.nvim_buf_get_option(0, 'ft') == 'drex'
 end
 
----Set up the autocommands for hiding the cursor and trigger them once
-function M.init()
-    vim.cmd [[
-        augroup DrexHideCursor
-            autocmd! * <buffer>
-            autocmd BufEnter,CmdlineLeave,CmdwinLeave <buffer> lua require('drex.cursor').hide()
-            autocmd BufLeave,CmdlineEnter,CmdwinEnter <buffer> lua require('drex.cursor').restore()
-        augroup END
-    ]]
-    M.hide()
-end
-
----Hide the cursor by setting `guicursor` to a custom highlighting
-function M.hide()
+---Hide the cursor by setting `guicursor` to our custom highlighting
+local function hide_cursor()
     -- instantly hide the cursor to prevent flickering
     vim.opt.guicursor:append('a:DrexTransparentCursor/lCursor')
     vim.opt.cursorlineopt = { 'both' } -- the default value
+
     -- check if the cursor was hidden erroneously (if so restore it)
     vim.schedule(function()
         if not is_drex_buffer() then
@@ -37,7 +37,7 @@ function M.hide()
 end
 
 ---Restore the cursor by setting `guicursor` back to its initial value
-function M.restore()
+local function restore_cursor()
     -- we schedule the call to check the "active" buffer (the one focused by the user)
     -- this should prevent false triggers by other (floating) windows
     -- also check if inside the cmdline to correctly restore the cursor there
@@ -49,4 +49,23 @@ function M.restore()
     end)
 end
 
-return M
+---Setup the autocommands for hiding the cursor within the current buffer and trigger them once
+local function init()
+    local hide_cursor_group = vim.api.nvim_create_augroup('DrexHideCursor', {})
+
+    vim.api.nvim_create_autocmd({ 'BufEnter', 'CmdlineLeave', 'CmdwinLeave' }, {
+        group = hide_cursor_group,
+        buffer = 0,
+        callback = hide_cursor,
+    })
+
+    vim.api.nvim_create_autocmd({ 'BufLeave', 'CmdlineEnter', 'CmdwinEnter' }, {
+        group = hide_cursor_group,
+        buffer = 0,
+        callback = restore_cursor,
+    })
+
+    hide_cursor()
+end
+
+return { init = init }

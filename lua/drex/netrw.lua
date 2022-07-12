@@ -1,21 +1,8 @@
-local M = {}
-
 local utils = require('drex.utils')
-
-function M.init()
-    vim.cmd('autocmd VimEnter * lua require("drex.netrw").suppress()')
-    vim.cmd('autocmd BufEnter * ++nested lua require("drex.netrw").hijack()')
-end
-
-function M.suppress()
-    if vim.fn.exists('#FileExplorer') ~= 0 then
-        vim.cmd('autocmd! FileExplorer *')
-    end
-end
 
 ---Check if the current buffer points to a directory
 ---If so replace it with a corresponding DREX buffer instead
-function M.hijack()
+local function hijack()
     local path = vim.fn.expand('%:p')
     if not utils.is_valid_directory(path) then
         return
@@ -35,4 +22,21 @@ function M.hijack()
     end
 end
 
-return M
+local function init()
+    vim.api.nvim_create_autocmd('VimEnter', {
+        pattern = '*',
+        callback = function()
+            if vim.fn.exists('#FileExplorer') ~= 0 then
+                vim.api.nvim_del_augroup_by_name('FileExplorer')
+            end
+        end,
+    })
+
+    vim.api.nvim_create_autocmd('BufEnter', {
+        pattern = '*',
+        nested = true,
+        callback = hijack,
+    })
+end
+
+return { init = init }
