@@ -273,6 +273,9 @@ Set this option to `true` to activate it.
 
 Note: This will not affect the |netrw-explore| commands
 
+Note: This options needs to be set before the plugin is loaded and can not be
+changed or toggled afterwards (especially in comparison to the other options)
+
 ------------------------------------------------------------------------------
 SORTING                                           *drex-configuration-sorting*
 
