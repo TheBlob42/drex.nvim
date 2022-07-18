@@ -1,3 +1,5 @@
+local utils = require('drex.utils')
+
 local saved_guicursor = vim.opt.guicursor:get()
 local saved_cursorlineopt = vim.opt.cursorlineopt:get()
 
@@ -17,10 +19,6 @@ vim.api.nvim_create_autocmd('ColorScheme', {
     callback = set_cursor_hl,
 })
 
-local function is_drex_buffer()
-    return vim.api.nvim_buf_get_option(0, 'ft') == 'drex'
-end
-
 ---Hide the cursor by setting `guicursor` to our custom highlighting
 local function hide_cursor()
     -- instantly hide the cursor to prevent flickering
@@ -29,7 +27,7 @@ local function hide_cursor()
 
     -- check if the cursor was hidden erroneously (if so restore it)
     vim.schedule(function()
-        if not is_drex_buffer() then
+        if not utils.is_drex_buffer(0) then
             vim.opt.guicursor = saved_guicursor
             vim.opt.cursorlineopt = saved_cursorlineopt
         end
@@ -42,7 +40,7 @@ local function restore_cursor()
     -- this should prevent false triggers by other (floating) windows
     -- also check if inside the cmdline to correctly restore the cursor there
     vim.schedule(function()
-        if not is_drex_buffer() or vim.fn.getcmdpos() > 0 then
+        if not utils.is_drex_buffer(0) or vim.fn.getcmdpos() > 0 then
             vim.opt.guicursor = saved_guicursor
             vim.opt.cursorlineopt = saved_cursorlineopt
         end
