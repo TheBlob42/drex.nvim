@@ -14,7 +14,7 @@ For showcase GIFs see [here](https://github.com/TheBlob42/drex.nvim/wiki/Showcas
 
 ## Installation
 
-> DREX requires Neovim version ≥ 0.5
+> DREX requires Neovim version ≥ 0.7
 
 Install DREX with your favorite plugin manager
 
