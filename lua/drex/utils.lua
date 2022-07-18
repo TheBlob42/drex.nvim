@@ -141,11 +141,18 @@ function M.echo(msg, history, highlight)
     api.nvim_echo({{ msg, highlight }}, history, {})
 end
 
----Check if the given `buffer` is a valid DREX buffer
+---Return if the given `buffer` is a DREX buffer
+---@param buffer number Buffer handle, or 0 for current buffer
+---@return boolean
+function M.is_drex_buffer(buffer)
+    return vim.api.nvim_buf_get_option(buffer, 'filetype') == 'drex'
+end
+
+---Check if the given `buffer` is a DREX buffer
 ---If not this function will throw an error (on level 2)
 ---@param buffer number Buffer handle, or 0 for current buffer
 function M.check_if_drex_buffer(buffer)
-    if api.nvim_buf_get_option(buffer, 'filetype') ~= 'drex' then
+    if not M.is_drex_buffer(buffer) then
         error('The given buffer is not a DREX buffer!', 2)
     end
 end
