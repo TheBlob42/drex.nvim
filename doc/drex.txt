@@ -16,7 +16,7 @@ FEATURES                                                       *drex-features*
 ==============================================================================
 INSTALLATION                                               *drex-installation*
 
-The plugin requires Neovim version >= 0.5
+The plugin requires Neovim version >= 0.7
 
 PACKER~
 (https://github.com/wbthomason/packer.nvim)
