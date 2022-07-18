@@ -100,8 +100,7 @@ end
 -- ####################################
 
 ---Set sane local defaults when entering a DREX buffer
----No need to call this function manually, there is an autocmd for it
-function M.on_enter()
+local function on_enter()
     -- not using `vim.opt_local` here because: https://github.com/neovim/neovim/issues/14670
     vim.cmd [[
         setlocal nowrap            " wrap and conceal don't play well together
@@ -119,8 +118,7 @@ function M.on_enter()
 end
 
 ---Call custom logic when leaving a DREX buffer
----No need to call this function manually, there is an autocmd for it
-function M.on_leave()
+local function on_leave()
     if config.options.on_leave then
         config.options.on_leave()
     end
@@ -160,15 +158,19 @@ function M.open_directory_buffer(path)
     load_buffer_content(buffer)
 
     -- set "sane defaults" autocmds
-    vim.cmd [[
-        augroup DrexBuflocal
-            autocmd! * <buffer>
-            autocmd BufEnter <buffer> lua require('drex').on_enter()
-            autocmd BufLeave <buffer> lua require('drex').on_leave()
-        augroup END
-    ]]
+    local local_group = vim.api.nvim_create_augroup('DrexBufLocal', {})
+    vim.api.nvim_create_autocmd('BufEnter', {
+        group = local_group,
+        buffer = buffer,
+        callback = on_enter,
+    })
+    vim.api.nvim_create_autocmd('BufLeave', {
+        group = local_group,
+        buffer = buffer,
+        callback = on_leave,
+    })
     -- trigger it once to set defaults
-    M.on_enter()
+    on_enter()
 end
 
 ---Expand the element in `row` in the given DREX `buffer`
