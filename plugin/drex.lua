@@ -82,7 +82,7 @@ vim.api.nvim_create_autocmd('SessionLoadPost', {
 })
 
 if require('drex.config').options.hijack_netrw then
-    require('drex.netrw').init()
+    require('drex.config.netrw').init()
 end
 
 -- ~~~~~~~~~~~~~
