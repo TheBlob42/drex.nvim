@@ -149,6 +149,7 @@ function M.open_directory_buffer(path)
     -- (re)set some basic buffer options
     api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
     api.nvim_buf_set_option(buffer, 'modifiable', false)
+    api.nvim_buf_set_option(buffer, 'shiftwidth', 2)
 
     -- set the buffer to the current window in order to properly load it
     api.nvim_set_current_buf(buffer)
