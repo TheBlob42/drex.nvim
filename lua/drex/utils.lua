@@ -213,4 +213,40 @@ function M.points_to_existing_directory(path)
     return stats and stats.type == 'directory'
 end
 
+---Reset the undo history for `buffer`
+---@param buffer number Buffer handle, or 0 for current buffer
+function M.buf_clear_undo_history(buffer)
+    local old_undolevels = vim.opt.undolevels:get()
+    api.nvim_buf_set_option(buffer, 'undolevels', -1)
+
+    api.nvim_buf_call(buffer, function()
+        vim.cmd(api.nvim_replace_termcodes('normal a <BS><ESC>', true, true, true))
+    end)
+
+    api.nvim_buf_set_option(buffer, 'undolevels', old_undolevels)
+end
+
+---Reload the syntax option in all currently visible DREX buffer
+function M.reload_drex_syntax()
+    for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
+        local buffer = api.nvim_win_get_buf(win)
+        if api.nvim_buf_get_option(buffer, 'filetype') == 'drex' then
+            api.nvim_buf_call(buffer, function() vim.cmd('doautocmd Syntax') end)
+        end
+    end
+end
+
+---Retrieve the (1-based) start and end row of the current or last visual selection
+---@return number start_row
+---@return number end_row
+function M.get_visual_selection()
+    local startRow = vim.fn.getpos("'<")[2]
+    local endRow   = vim.fn.getpos("'>")[2]
+    if startRow < endRow then
+        return startRow, endRow
+    else
+        return endRow, startRow
+    end
+end
+
 return M

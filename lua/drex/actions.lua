@@ -62,52 +62,6 @@ local function get_clipboard_entries(sort_order)
     return clipboard_entries
 end
 
----Reload the syntax option in all currently visible DREX buffer
-local function reload_drex_syntax()
-    for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-        local buffer = api.nvim_win_get_buf(win)
-        if api.nvim_buf_get_option(buffer, 'filetype') == 'drex' then
-            api.nvim_buf_call(buffer, function() vim.cmd('doautocmd Syntax') end)
-        end
-    end
-end
-
----Retrieve the start and end row of the current or last visual selection
----@return number
----@return number
-local function visual_selected_rows()
-    local startRow = vim.fn.getpos("'<")[2]
-    local endRow   = vim.fn.getpos("'>")[2]
-    if startRow < endRow then
-        return startRow, endRow
-    else
-        return endRow, startRow
-    end
-end
-
----Reset the undo history for `buffer`
----@param buffer number Buffer handle, or 0 for current buffer
-local function buf_clear_undo_history(buffer)
-    -- local old_undolevels = vim.opt.undolevels:get()
-    -- api.nvim_buf_set_option(buffer, 'undolevels', -1)
-    -- api.nvim_buf_call(buffer, function()
-    --     vim.cmd(api.nvim_replace_termcodes('normal a <BS><ESC>', true, true, true))
-    -- end)
-    -- api.nvim_buf_set_option(buffer, 'undolevels', old_undolevels)
-
-    -- in current stable version there is a bug so we have to perform this in VIML till 0.7
-    -- see: https://github.com/neovim/neovim/pull/15996
-    api.nvim_buf_call(buffer, function()
-        vim.cmd [[
-            let old_undolevels = &undolevels
-            set undolevels=-1
-            exe "normal a \<BS>\<ESC>"
-            let &undolevels = old_undolevels
-            unlet old_undolevels
-        ]]
-    end)
-end
-
 ---Return the path of the current line as destination path
 ---If the line represents a directory ask the user if the destination should be inside this directory or on the same level instead
 ---If the user does not choose any option but cancels instead return `nil`
@@ -171,7 +125,7 @@ function M.open_clipboard_window()
     api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
     api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit')
     api.nvim_buf_set_name(buffer, 'DREX Clipboard')
-    buf_clear_undo_history(buffer)
+    utils.buf_clear_undo_history(buffer)
 
     local vim_width = vim.opt.columns:get()
     local vim_height = vim.opt.lines:get()
@@ -239,7 +193,7 @@ function M.open_clipboard_window()
                 end
                 M.clipboard = tmp_clipboard
 
-                reload_drex_syntax()
+                utils.reload_drex_syntax()
             end
         end
 
@@ -263,7 +217,7 @@ end
 ---Clear the clipboard and reload the DREX syntax
 function M.clear_clipboard()
     M.clipboard = {}
-    reload_drex_syntax()
+    utils.reload_drex_syntax()
 end
 
 ---Mark the elements from `startRow` to `endRow` and add them to the DREX clipboard
@@ -281,7 +235,7 @@ function M.mark(startRow, endRow)
         M.clipboard[element] = true
     end
 
-    reload_drex_syntax()
+    utils.reload_drex_syntax()
 end
 
 ---Unmark the elements from `startRow` to `endRow` and remove them from the DREX clipboard
@@ -299,7 +253,7 @@ function M.unmark(startRow, endRow)
         M.clipboard[element] = nil
     end
 
-    reload_drex_syntax()
+    utils.reload_drex_syntax()
 end
 
 ---Toggle the elements from `startRow` to `endRow`
@@ -319,7 +273,7 @@ function M.toggle(startRow, endRow)
         M.clipboard[element] = not M.clipboard[element] or nil
     end
 
-    reload_drex_syntax()
+    utils.reload_drex_syntax()
 end
 
 -- ####################################
@@ -730,7 +684,7 @@ local function paste(move)
 
         if move then
             msg = 'Moved ' .. element_counter .. ' element' .. suffix
-            reload_drex_syntax()
+            utils.reload_drex_syntax()
         else
             msg = 'Copied ' .. element_counter .. ' element' .. suffix .. ' (' .. files_counter .. ' file' .. suffix .. ')'
         end
@@ -789,7 +743,7 @@ function M.multi_rename(mode)
         end
     elseif mode == 'visual' then
         elements = {}
-        local startRow, endRow = visual_selected_rows()
+        local startRow, endRow = utils.get_visual_selection()
         for row = startRow, endRow, 1 do
             table.insert(elements, utils.get_element(vim.fn.getline(row)))
         end
@@ -811,7 +765,7 @@ function M.multi_rename(mode)
     api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
     api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit') -- to shade comment lines
     api.nvim_buf_set_name(buffer, 'DREX Rename')
-    buf_clear_undo_history(buffer)
+    utils.buf_clear_undo_history(buffer)
 
     vim.cmd('below split')
     api.nvim_set_current_buf(buffer)
@@ -909,7 +863,7 @@ function M.rename()
         if M.clipboard[old_element] then
             M.clipboard[old_element] = nil
             M.clipboard[new_element] = true
-            reload_drex_syntax()
+            utils.reload_drex_syntax()
         end
 
         -- if the renamed element is in scope of the current DREX buffer, focus it
@@ -939,7 +893,7 @@ end
 ---Nonexistent directories of the new path will be created as well
 ---@param dest_path string? (Optional) Path of the newly created element, if not provided use the element under the cursor
 function M.create(dest_path)
-    local dest_path = dest_path or get_destination_path()
+    dest_path = dest_path or get_destination_path()
     if not dest_path then
         return
     end
@@ -1032,7 +986,7 @@ function M.delete(mode)
         utils.echo('[CLIPBOARD DELETE]')
     elseif mode == 'visual' then
         elements = {}
-        local startRow, endRow = visual_selected_rows()
+        local startRow, endRow = utils.get_visual_selection()
         for row = startRow, endRow, 1 do
             local element = utils.get_element(vim.fn.getline(row))
             table.insert(elements, element)
@@ -1072,7 +1026,7 @@ function M.delete(mode)
                     goto continue
                 else
                     clear_matches()
-                    reload_drex_syntax()
+                    utils.reload_drex_syntax()
                     return false
                 end
             end
@@ -1095,7 +1049,7 @@ function M.delete(mode)
 
     vim.notify('Deleted ' .. delete_counter .. ' element' .. (delete_counter > 1 and 's' or ''), vim.log.levels.INFO, { title = 'DREX' })
     clear_matches()
-    reload_drex_syntax()
+    utils.reload_drex_syntax()
     return true
 end
 
@@ -1202,7 +1156,7 @@ end
 local function copy_element_strings(selection, extract_fn)
     local lines = {}
     if selection then
-        local startRow, endRow = visual_selected_rows()
+        local startRow, endRow = utils.get_visual_selection()
         for row = startRow, endRow, 1 do
             table.insert(lines, extract_fn(vim.fn.getline(row)))
         end
