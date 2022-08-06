@@ -28,6 +28,23 @@ M.path_separator = package.config:sub(1, 1)
 -- group 5: name
 local line_pattern = string.gsub('^(%s*)([^%s/]+) ((.*/)(.*))$', '/', M.path_separator)
 
+---Extract the indentation from a `line`
+---The indentation are all spaces BEFORE the icon
+---
+---Examples:
+---<pre>
+---| Input                          | Output |
+---|--------------------------------|--------|
+---| " + /home/user"                | " "    |
+---| "   · /home/user/example.json" | "   "  |
+---</pre>
+---@param line string The line string to operate on
+---@return string
+function M.get_indentation(line)
+    local indentation = line:match(line_pattern)
+    return indentation
+end
+
 ---Extract the file/directory icon from a `line`
 ---
 ---Examples:
@@ -42,6 +59,22 @@ local line_pattern = string.gsub('^(%s*)([^%s/]+) ((.*/)(.*))$', '/', M.path_sep
 function M.get_icon(line)
     local _, icon = line:match(line_pattern)
     return icon
+end
+
+---Extract the complete element from a `line`
+---
+---Examples:
+---<pre>
+---| Input                          | Output                    |
+---|--------------------------------|---------------------------|
+---| " + /home/user"                | "/home/user"              |
+---| "   · /home/user/example.json" | "/home/user/example.json" |
+---</pre>
+---@param line string The line string to operate on
+---@return string
+function M.get_element(line)
+    local _, _, element = line:match(line_pattern)
+    return element
 end
 
 ---Extract the elements path from a `line`
@@ -74,22 +107,6 @@ end
 function M.get_name(line)
     local _, _, _, _, name = line:match(line_pattern)
     return name
-end
-
----Extract the complete element from a `line`
----
----Examples:
----<pre>
----| Input                          | Output                    |
----|--------------------------------|---------------------------|
----| " + /home/user"                | "/home/user"              |
----| "   · /home/user/example.json" | "/home/user/example.json" |
----</pre>
----@param line string The line string to operate on
----@return string
-function M.get_element(line)
-    local _, _, element = line:match(line_pattern)
-    return element
 end
 
 ---Checks the configured directory icons to see if the element on `line` is a directory
