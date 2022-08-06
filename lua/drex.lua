@@ -126,7 +126,7 @@ end
 
 ---Open a DREX buffer pointing to a given directory `path`
 ---If a corresponding buffer already exists reuse it instead of creating a new one
----@param path string (Optional) The path to a directory which should be opened (defaults to cwd)
+---@param path string? (Optional) The path to a directory which should be opened (defaults to cwd)
 function M.open_directory_buffer(path)
     path = utils.expand_path(path or '.')
 
@@ -178,8 +178,8 @@ end
 ---If the element is a closed directory expand its subtree
 ---If the element is a file open it (see `open_file`)
 ---Otherwise don't do anything
----@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
----@param row number (Optional) 1-based index of the row to expand (defaults to the current row)
+---@param buffer number? (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
+---@param row number? (Optional) 1-based index of the row to expand (defaults to the current row)
 function M.expand_element(buffer, row)
     buffer = buffer or api.nvim_get_current_buf()
     if buffer == 0 then
@@ -223,8 +223,8 @@ end
 ---Collapse the directory element in `row` in `buffer`
 ---If the element is an open directory collapse its subtree
 ---Otherwise collapse the parent directory of the given element
----@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
----@param row number (Optional) 1-based index of the row to collapse (defaults to the current row)
+---@param buffer number? (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
+---@param row number? (Optional) 1-based index of the row to collapse (defaults to the current row)
 function M.collapse_directory(buffer, row)
     buffer = buffer or api.nvim_get_current_buf() -- defaults to current buffer
 
@@ -303,8 +303,8 @@ end
 
 ---Reloads the content of the directory given by `path` in the DREX `buffer`
 ---Expanded sub directories will be expanded again after the reload (if possible)
----@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
----@param path string (Optional) Path which should be reloaded (defaults to the root path of the current DREX buffer)
+---@param buffer number? (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
+---@param path string? (Optional) Path which should be reloaded (defaults to the root path of the current DREX buffer)
 function M.reload_directory(buffer, path)
     buffer = buffer or api.nvim_get_current_buf()
 
@@ -473,8 +473,8 @@ function M.open_directory()
 end
 
 ---Open the file under the cursor
----@param pre string VIM command to execute before opening the file (e.g. to split the window first)
----@param change_tab boolean Indicator if your `pre` command is switching to another tabpage (skip the drawer special handling if so)
+---@param pre string? VIM command to execute before opening the file (e.g. to split the window first)
+---@param change_tab boolean? Indicator if your `pre` command is switching to another tabpage (skip the drawer special handling if so)
 function M.open_file(pre, change_tab)
     local line = api.nvim_get_current_line()
 
@@ -523,7 +523,7 @@ end
 ---- The buffer in `win` is not a DREX buffer
 ---- The given `path` is not relative to the root path of the targeted DREX buffer
 ---@param win number The target window id (0 for current window)
----@param path string (Optional) Path of the target element (defaults to the current file)
+---@param path string? (Optional) Path of the target element (defaults to the current file)
 function M.focus_element(win, path)
     if win == 0 then
         -- get the "real" window id for the current window (instead of 0)

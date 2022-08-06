@@ -227,7 +227,7 @@ end
 ---Scan the contents of the given directory and format it for the usage in a DREX buffer
 ---If the given `path` does not exist or is not a directory this function returns `nil`
 ---@param path string Directory which should be scanned for its content
----@param root_path string (Optional) Used to calculate the indentation for the usage as sub-tree
+---@param root_path string? (Optional) Used to calculate the indentation for the usage as sub-tree
 ---@return table content Directory content lines (formatted) or `nil`
 function M.scan_directory(path, root_path)
     -- ensure that it's an absolute path
