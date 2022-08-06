@@ -233,9 +233,9 @@ function M.scan_directory(path, root_path)
     -- ensure that it's an absolute path
     path = vim.fn.fnamemodify(path, ':p')
 
-    -- ensure that the target is a valid directory
-    if not utils.is_valid_directory(path) then
-        print("'" .. path .. "' is not a directory!")
+    -- ensure that the target is an existing directory
+    if not utils.points_to_existing_directory(path) then
+        print("'" .. path .. "' does not point to an existing directory!")
         return
     end
 

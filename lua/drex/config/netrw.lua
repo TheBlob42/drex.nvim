@@ -1,10 +1,10 @@
 local utils = require('drex.utils')
 
----Check if the current buffer points to a directory
+---Check if the current buffer points to an existing directory
 ---If so replace it with a corresponding DREX buffer instead
 local function hijack()
     local path = vim.fn.expand('%:p')
-    if not utils.is_valid_directory(path) then
+    if not utils.points_to_existing_directory(path) then
         return
     end
 
