@@ -114,6 +114,20 @@ function M.is_closed_directory(line)
     return M.get_icon(line) == config.options.icons.dir_closed
 end
 
+---Set the given `icon` for the specific `row`
+---@param icon string The icon which should be set
+---@param row number (Optional) 1-based index of the target row (defaults to the current row of the current window)
+---@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
+function M.set_icon(icon, row, buffer)
+    row = row or api.nvim_win_get_cursor(0)[1]
+    buffer = buffer or api.nvim_get_current_buf()
+
+    local line = api.nvim_buf_get_lines(buffer, row - 1, row, false)[1]
+    local indentation, old_icon = line:match(line_pattern)
+
+    api.nvim_buf_set_text(buffer, row - 1, 0, row - 1, #indentation + #old_icon, { indentation .. icon })
+end
+
 ---Get the "visible" column width of `line`
 ---Since the path of the element is concealed, this will sum up:
 ---- indentation
@@ -129,7 +143,7 @@ function M.get_visible_width(line)
 end
 
 -- ###############################################
--- ### general utility
+-- ### miscellaneous utility
 -- ###############################################
 
 ---Simple wrapper around `vim.api.nvim_echo` to simplify its usage
@@ -173,24 +187,6 @@ function M.get_root_path(buffer)
     local buf_name = api.nvim_buf_get_name(buffer)
     return buf_name:match("^drex://(.*)$")
 end
-
----Set the given `icon` for the specific `row`
----@param icon string The icon which should be set
----@param row number (Optional) 1-based index of the target row (defaults to the current row of the current window)
----@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
-function M.set_icon(icon, row, buffer)
-    row = row or api.nvim_win_get_cursor(0)[1]
-    buffer = buffer or api.nvim_get_current_buf()
-
-    local line = api.nvim_buf_get_lines(buffer, row - 1, row, false)[1]
-    local indentation, old_icon = line:match(line_pattern)
-
-    api.nvim_buf_set_text(buffer, row - 1, 0, row - 1, #indentation + #old_icon, { indentation .. icon })
-end
-
--- ###############################################
--- ### LUV utility
--- ###############################################
 
 ---Use libuv to check if `path` points to a valid directory
 ---@param path string
