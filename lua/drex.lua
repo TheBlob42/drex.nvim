@@ -130,8 +130,8 @@ end
 function M.open_directory_buffer(path)
     path = utils.expand_path(path or '.')
 
-    if not utils.is_valid_directory(path) then
-        vim.notify("The path '" .. path .. "' does not point to a valid directory!", vim.log.levels.ERROR, { title = 'DREX' })
+    if not utils.points_to_existing_directory(path) then
+        vim.notify("The path '" .. path .. "' does not point to an existing directory!", vim.log.levels.ERROR, { title = 'DREX' })
         return
     end
 
@@ -320,8 +320,8 @@ function M.reload_directory(buffer, path)
     local root_path = utils.get_root_path(buffer)
     path = path or root_path
 
-    if not utils.is_valid_directory(path) then
-        utils.echo("The given path '" .. path .. "' is not a directory!", true, 'ErrorMsg')
+    if not utils.points_to_existing_directory(path) then
+        utils.echo("The path '" .. path .. "' does not point to an existing directory!", true, 'ErrorMsg')
         return
     end
 

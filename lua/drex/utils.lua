@@ -188,10 +188,10 @@ function M.get_root_path(buffer)
     return buf_name:match("^drex://(.*)$")
 end
 
----Use libuv to check if `path` points to a valid directory
+---Use libuv to check if `path` points to an existing directory
 ---@param path string
 ---@return boolean
-function M.is_valid_directory(path)
+function M.points_to_existing_directory(path)
     local stats = vim.loop.fs_stat(path)
     return stats and stats.type == 'directory'
 end
