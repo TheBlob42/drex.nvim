@@ -160,17 +160,8 @@ function M.get_visible_width(line)
 end
 
 -- ###############################################
--- ### miscellaneous utility
+-- ### drex specific utility
 -- ###############################################
-
----Simple wrapper around `vim.api.nvim_echo` to simplify its usage
----@param msg string Message which should be displayed
----@param history boolean (Optional) Should the message be logged in the history (defaults to `false`)
----@param highlight string (Optional) Highlight group to use (defaults to 'None')
-function M.echo(msg, history, highlight)
-    highlight = highlight or 'None'
-    api.nvim_echo({{ msg, highlight }}, history, {})
-end
 
 ---Return if the given `buffer` is a DREX buffer
 ---@param buffer number Buffer handle, or 0 for current buffer
@@ -188,14 +179,6 @@ function M.check_if_drex_buffer(buffer)
     end
 end
 
----Expand the given path properly so it can be used within DREX
----Use `expand` to deal with special modifiers and `fnamemodify` to make the path absolute
----@param path string The path string which should be expanded
----@return string
-function M.expand_path(path)
-    return vim.fn.fnamemodify(vim.fn.expand(path), ':p')
-end
-
 ---Get the root path of the given DREX `buffer`
 ---@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
 ---@return string
@@ -203,6 +186,37 @@ function M.get_root_path(buffer)
     buffer = buffer or api.nvim_get_current_buf()
     local buf_name = api.nvim_buf_get_name(buffer)
     return buf_name:match("^drex://(.*)$")
+end
+
+---Reload the syntax option in all currently visible DREX buffer
+function M.reload_drex_syntax()
+    for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
+        local buffer = api.nvim_win_get_buf(win)
+        if api.nvim_buf_get_option(buffer, 'filetype') == 'drex' then
+            api.nvim_buf_call(buffer, function() vim.cmd('doautocmd Syntax') end)
+        end
+    end
+end
+
+-- ###############################################
+-- ### miscellaneous utility
+-- ###############################################
+
+---Simple wrapper around `vim.api.nvim_echo` to simplify its usage
+---@param msg string Message which should be displayed
+---@param history boolean (Optional) Should the message be logged in the history (defaults to `false`)
+---@param highlight string (Optional) Highlight group to use (defaults to 'None')
+function M.echo(msg, history, highlight)
+    highlight = highlight or 'None'
+    api.nvim_echo({{ msg, highlight }}, history, {})
+end
+
+---Expand the given path properly so it can be used within DREX
+---Use `expand` to deal with special modifiers and `fnamemodify` to make the path absolute
+---@param path string The path string which should be expanded
+---@return string
+function M.expand_path(path)
+    return vim.fn.fnamemodify(vim.fn.expand(path), ':p')
 end
 
 ---Use libuv to check if `path` points to an existing directory
@@ -224,16 +238,6 @@ function M.buf_clear_undo_history(buffer)
     end)
 
     api.nvim_buf_set_option(buffer, 'undolevels', old_undolevels)
-end
-
----Reload the syntax option in all currently visible DREX buffer
-function M.reload_drex_syntax()
-    for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-        local buffer = api.nvim_win_get_buf(win)
-        if api.nvim_buf_get_option(buffer, 'filetype') == 'drex' then
-            api.nvim_buf_call(buffer, function() vim.cmd('doautocmd Syntax') end)
-        end
-    end
 end
 
 ---Retrieve the (1-based) start and end row of the current or last visual selection
