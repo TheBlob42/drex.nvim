@@ -133,8 +133,8 @@ end
 
 ---Set the given `icon` for the specific `row`
 ---@param icon string The icon which should be set
----@param row number (Optional) 1-based index of the target row (defaults to the current row of the current window)
----@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
+---@param row number? (Optional) 1-based index of the target row (defaults to the current row of the current window)
+---@param buffer number? (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
 function M.set_icon(icon, row, buffer)
     row = row or api.nvim_win_get_cursor(0)[1]
     buffer = buffer or api.nvim_get_current_buf()
@@ -180,7 +180,7 @@ function M.check_if_drex_buffer(buffer)
 end
 
 ---Get the root path of the given DREX `buffer`
----@param buffer number (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
+---@param buffer number? (Optional) Buffer handle, or 0 for current buffer (defaults to the current buffer)
 ---@return string
 function M.get_root_path(buffer)
     buffer = buffer or api.nvim_get_current_buf()
@@ -204,8 +204,8 @@ end
 
 ---Simple wrapper around `vim.api.nvim_echo` to simplify its usage
 ---@param msg string Message which should be displayed
----@param history boolean (Optional) Should the message be logged in the history (defaults to `false`)
----@param highlight string (Optional) Highlight group to use (defaults to 'None')
+---@param history boolean? (Optional) Should the message be logged in the history (defaults to `false`)
+---@param highlight string? (Optional) Highlight group to use (defaults to 'None')
 function M.echo(msg, history, highlight)
     highlight = highlight or 'None'
     api.nvim_echo({{ msg, highlight }}, history, {})

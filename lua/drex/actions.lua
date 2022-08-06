@@ -48,7 +48,7 @@ M.clipboard = {}
 ---</pre>
 ---
 ---Otherwise the `copy_and_paste` function would sometimes not be deterministic, depending on the order of the clipboard entries
----@param sort_order string (Optional) If provided sort the clipboard entries accordingly ('asc' or 'desc')
+---@param sort_order string? (Optional) If provided sort the clipboard entries accordingly ('asc' or 'desc')
 ---@return table
 local function get_clipboard_entries(sort_order)
     local clipboard_entries = vim.tbl_keys(M.clipboard)
@@ -283,7 +283,7 @@ end
 ---Delete an `element`
 ---If the element is a directory this also deletes all of its content
 ---@param element string The element you want to delete
----@param element_type? string (Optional) The type of the element, if already known
+---@param element_type string? (Optional) The type of the element, if already known
 ---@return boolean success Indicates if the deletion was successful
 ---@return string? error The corresponding error message if there was one
 local function delete_element(element, element_type)
