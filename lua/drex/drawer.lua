@@ -92,7 +92,7 @@ function M.find_element(path, focus_drawer_window, resize_drawer_window)
         drawer_window = M.get_drawer_window()
     end
 
-    drex.focus_element(drawer_window, path)
+    require('drex.actions.elements').focus_element(drawer_window, path)
 
     if resize_drawer_window then
         api.nvim_win_call(drawer_window, function()

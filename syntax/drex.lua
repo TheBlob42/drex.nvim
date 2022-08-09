@@ -1,13 +1,16 @@
-if vim.fn.exists('b:current_syntax') ~= 0 then
+if vim.b.current_syntax then
     return
 end
 
-local sep = require('drex.utils').path_separator
+local utils = require('drex.utils')
+local config = require('drex.config')
+local clipboard = require('drex.actions.clipboard').clipboard
+
+local esc = utils.vim_escape
+local sep = utils.path_separator
+
 -- conceal full paths (like `vim-dirvish`)
 vim.cmd([[syntax match DrexPath "\([a-zA-Z]:\)\?\]]..sep..[[\(.*\]]..sep..[[\)\?" conceal cchar= ]])
-
-local clipboard = require('drex.actions').clipboard
-local esc = require('drex.utils').vim_escape
 
 -- syntax highlighting for nested files
 for element, _ in pairs(clipboard) do
@@ -20,14 +23,14 @@ for element, _ in pairs(clipboard) do
 end
 
 -- syntax highlighting for different elements to separate them from regular files
-local icons = require('drex.config').options.icons
+local icons = config.options.icons
 local syntax = 'syntax region %s start="%s" end="$" contains=DrexPath,DrexSelected,DrexMarked keepend'
 vim.cmd(syntax:format('DrexDir', icons.dir_closed))
 vim.cmd(syntax:format('DrexDir', icons.dir_open))
 vim.cmd(syntax:format('DrexLink', icons.link))
 vim.cmd(syntax:format('DrexOthers', icons.others))
 
-if require('drex.config').options.colored_icons then
+if config.options.colored_icons then
     local dev_icons_ok, dev_icons = pcall(require, 'nvim-web-devicons')
     if dev_icons_ok then
         for _, icon in pairs(dev_icons.get_icons()) do
