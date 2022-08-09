@@ -2,20 +2,23 @@
 -- Due to all the character labels this file is quite long, so instead of blowing up another utils file we have outsourced it into its own file
 -- Also you can easily extract this file to use it in your own config or plugin if you're in need of a similar functionality (probably with slight adaptions)
 
--- make the letters more visible
--- implement this here, so the file is easier extractable for your own usage
-vim.cmd('highlight! SwitchWindowReverse cterm=reverse gui=reverse')
-vim.cmd [[
-    augroup SwitchWindow
-        au!
-        au! ColorScheme * highlight! SwitchWindowReverse cterm=reverse gui=reverse
-    augroup END
-]]
-
 local M = {}
 
 local api = vim.api
 local config = require('drex.config')
+
+---Make the letters more visible by setting the used highlight to "reverse"
+local function set_hl()
+    vim.api.nvim_set_hl(0, 'SwitchWindowReverse', { reverse = true })
+end
+
+set_hl()
+
+vim.api.nvim_create_autocmd('ColorScheme', {
+    group = vim.api.nvim_create_augroup('SwitchWindow', {}),
+    pattern = '*',
+    callback = set_hl,
+})
 
 local letters = {
     ['a'] = {

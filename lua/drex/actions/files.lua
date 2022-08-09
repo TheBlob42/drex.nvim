@@ -2,65 +2,13 @@ local M = {}
 
 local api = vim.api
 local luv = vim.loop
-local utils = require('drex.utils')
+
 local fs = require('drex.fs')
+local utils = require('drex.utils')
+local clipboard = require('drex.actions.clipboard')
 
----Private table to store buffer specific autocommand functions
-local buffer_autocmds = {}
-
----Call a buffer specific autocommand function (if there is one)
----This is only intended for the usage within autocommands
----@param buffer number Buffer handle
-function M.call_buf_autocmd(buffer)
-    local fn = buffer_autocmds[buffer]
-    if fn then
-        fn()
-    end
-end
-
-M.clipboard = {}
-
--- ####################################
--- ### local utility functions
--- ####################################
-
----Return all elements currently contained in the DREX clipboard
----You can specify a sort order ('asc' or 'desc'), otherwise the elements might be returned in any order
----
----If you want to perform any actions on the contained elements you should set the `sort_order` to 'desc' so that more detailed paths occur first in the result list
----
----<pre>
----{
----  "/home/user/dir/file.txt",
----  "/home/user/dir",
----}
----</pre>
----
----This should be done so that all performed actions have a deterministic outcome
----In the above example `copy_and_paste` would first copy `file.txt` to the destination and then copy `dir` (including `file.txt` within it's content)
----
----<pre>
----destination/
----- file.txt
----- dir/
----  - file.txt
----  - ...
----</pre>
----
----Otherwise the `copy_and_paste` function would sometimes not be deterministic, depending on the order of the clipboard entries
----@param sort_order string? (Optional) If provided sort the clipboard entries accordingly ('asc' or 'desc')
----@return table
-local function get_clipboard_entries(sort_order)
-    local clipboard_entries = vim.tbl_keys(M.clipboard)
-
-    if sort_order == 'asc' then
-        table.sort(clipboard_entries)
-    elseif sort_order == 'desc' then
-        table.sort(clipboard_entries, function(a, b) return a > b end)
-    end
-
-    return clipboard_entries
-end
+-- augroup for the multi rename buffer
+local rename_group = api.nvim_create_augroup('DrexRenameBuffer', {})
 
 ---Return the path of the current line as destination path
 ---If the line represents a directory ask the user if the destination should be inside this directory or on the same level instead
@@ -97,188 +45,6 @@ local function get_destination_path()
         return utils.get_path(line)
     end
 end
-
--- ####################################
--- ### clipboard related functions
--- ####################################
-
----Edit all DREX clipboard entries in a floating window
----Some important notes:
----- The clipboard is updated once you leave the buffer or close the window
----- Empty lines and comments (starting with '#') will be ignored
----- Invalid paths will also be ignored
-function M.open_clipboard_window()
-    local elements = get_clipboard_entries('asc')
-    local buf_lines = {
-        '# DREX CLIPBOARD',
-        '',
-        '# Confirm changes by leaving this buffer or closing the window and approve the',
-        "# confirmation (only if changes exist). Empty lines, comments starting with '#'",
-        '# and non-existing elements will be ignored and not added to the clipboard',
-        '',
-        unpack(elements)
-    }
-
-    local buffer = api.nvim_create_buf(false, true)
-    api.nvim_buf_set_lines(buffer, 0, -1, false, buf_lines)
-    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
-    api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
-    api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit')
-    api.nvim_buf_set_name(buffer, 'DREX Clipboard')
-    utils.buf_clear_undo_history(buffer)
-
-    local vim_width = vim.opt.columns:get()
-    local vim_height = vim.opt.lines:get()
-
-    -- calculate floating window dimensions
-    -- - height: 80% of the Neovim window
-    -- - width:
-    --   - 60% of Neovim window (default)
-    --   - or at least 80 columns
-    --   - or as long as the longest element (if enough space)
-    local win_height = math.floor(vim_height * 0.8)
-    local win_width = math.floor(vim_width * 0.6)
-
-    win_width = win_width < 80 and 80 or win_width
-    local max_element_width = vim.fn.max(vim.tbl_map(function(element) return #element end, elements))
-    if max_element_width > win_width then
-        if max_element_width > vim_width - 10 then
-            win_width = vim_width - 10
-        else
-            win_width = max_element_width
-        end
-    end
-
-    local x = math.floor((vim_width - win_width) / 2)
-    local y = math.floor((vim_height - win_height) / 2)
-
-    local clipboard_win = api.nvim_open_win(buffer, true, {
-        relative = 'editor',
-        width = win_width,
-        height = win_height,
-        col = x,
-        row = y,
-        style = 'minimal',
-        border = 'rounded',
-        noautocmd = false,
-    })
-    api.nvim_win_set_option(clipboard_win, 'wrap', false)
-
-    buffer_autocmds[buffer] = function()
-        local buf_elements = {}
-
-        for _, element in ipairs(api.nvim_buf_get_lines(buffer, 0, -1, false)) do
-            if element ~= '' and not vim.startswith(element, '#') then
-                if vim.endswith(element, utils.path_separator) then
-                    -- remove trailing path separator for directories
-                    element = element:sub(1, #element - 1)
-                end
-
-                if luv.fs_access(element, 'r') then
-                    table.insert(buf_elements, element)
-                end
-            end
-        end
-
-        table.sort(buf_elements)
-
-        if table.concat(elements) ~= table.concat(buf_elements) then
-            vim.cmd('redraw')
-            local apply_changes = vim.fn.confirm('Should your changes be applied?', '&Yes\n&No', 1) == 1
-
-            if apply_changes then
-                local tmp_clipboard = {}
-                for _, element in ipairs(buf_elements) do
-                    tmp_clipboard[element] = true
-                end
-                M.clipboard = tmp_clipboard
-
-                utils.reload_drex_syntax()
-            end
-        end
-
-        vim.schedule(function()
-            if api.nvim_win_is_valid(clipboard_win) then
-                api.nvim_win_close(clipboard_win, true)
-            end
-        end)
-
-        buffer_autocmds[buffer] = nil
-    end
-
-    vim.cmd(table.concat({
-        'augroup DrexClipboardBuffer',
-            'autocmd! * <buffer>',
-            'autocmd WinLeave,BufUnload <buffer> lua require("drex.actions").call_buf_autocmd(' .. buffer .. ')',
-        'augroup END',
-    }, '\n'))
-end
-
----Clear the clipboard and reload the DREX syntax
-function M.clear_clipboard()
-    M.clipboard = {}
-    utils.reload_drex_syntax()
-end
-
----Mark the elements from `startRow` to `endRow` and add them to the DREX clipboard
----If not both parameters are provided use the current line as default
----@param startRow number
----@param endRow number
-function M.mark(startRow, endRow)
-    if not startRow or not endRow then
-        startRow = api.nvim_win_get_cursor(0)[1]
-        endRow = api.nvim_win_get_cursor(0)[1]
-    end
-
-    for row = startRow, endRow, 1 do
-        local element = utils.get_element(vim.fn.getline(row))
-        M.clipboard[element] = true
-    end
-
-    utils.reload_drex_syntax()
-end
-
----Unmark the elements from `startRow` to `endRow` and remove them from the DREX clipboard
----If not both parameters are provided use the current line as default
----@param startRow number
----@param endRow number
-function M.unmark(startRow, endRow)
-    if not startRow or not endRow then
-        startRow = api.nvim_win_get_cursor(0)[1]
-        endRow = api.nvim_win_get_cursor(0)[1]
-    end
-
-    for row = startRow, endRow, 1 do
-        local element = utils.get_element(vim.fn.getline(row))
-        M.clipboard[element] = nil
-    end
-
-    utils.reload_drex_syntax()
-end
-
----Toggle the elements from `startRow` to `endRow`
----- A marked row will be unmarked and removed from the DREX clipboard
----- An unmarked row will be marked and added to the DREX clipboard
----If not both parameters are provided use the current line as default
----@param startRow number
----@param endRow number
-function M.toggle(startRow, endRow)
-    if not startRow or not endRow then
-        startRow = api.nvim_win_get_cursor(0)[1]
-        endRow = api.nvim_win_get_cursor(0)[1]
-    end
-
-    for row = startRow, endRow, 1 do
-        local element = utils.get_element(vim.fn.getline(row))
-        M.clipboard[element] = not M.clipboard[element] or nil
-    end
-
-    utils.reload_drex_syntax()
-end
-
--- ####################################
--- ### file action related functions
--- ####################################
 
 ---Delete an `element`
 ---If the element is a directory this also deletes all of its content
@@ -624,7 +390,7 @@ end
 ---If you move the elements (`move` == true) the DREX clipboard entries will be updated to match the new location
 ---@param move boolean Should the entries be moved (removed from their current location) or copied
 local function paste(move)
-    local elements = get_clipboard_entries('desc')
+    local elements = clipboard.get_clipboard_entries('desc')
 
     -- check for an empty clipboard
     if vim.tbl_count(elements) == 0 then
@@ -650,8 +416,8 @@ local function paste(move)
         if move then
             local renamed_element, error = rename_element(element, new_element)
             if renamed_element then
-                M.clipboard[element] = nil
-                M.clipboard[renamed_element] = true
+                clipboard.clipboard[element] = nil
+                clipboard.clipboard[renamed_element] = true
                 table.insert(pasted_elements, renamed_element)
             else
                 table.insert(errors_found, error)
@@ -694,7 +460,7 @@ local function paste(move)
             local new_element = pasted_elements[1]
             local window = api.nvim_get_current_win()
             local focus_fn = function()
-                require('drex').focus_element(window, new_element)
+                require('drex.actions.elements').focus_element(window, new_element)
             end
 
             if not fs.post_next_reload(vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
@@ -723,20 +489,11 @@ function M.cut_and_move()
     paste(true)
 end
 
----Rename multiple elements in a separate buffer
----- 'clipboard': rename all elements from the DREX clipboard
----- 'visual': rename all elements in the current visual selection
----- 'line': (default) rename the element in the current line
----
----Some important notes:
----- The renaming is executed once you close the buffer (you will be asked to confirm)
----- The renaming happens in the order of the elements within the buffer
----@param mode string The rename mode to use
 function M.multi_rename(mode)
     local elements
 
     if mode == 'clipboard' then
-        elements = get_clipboard_entries('desc')
+        elements = clipboard.get_clipboard_entries('desc')
         if #elements == 0 then
             vim.notify('The clipboard is empty! There is nothing to rename...', vim.log.levels.INFO, { title = 'DREX' })
             return
@@ -770,7 +527,7 @@ function M.multi_rename(mode)
     vim.cmd('below split')
     api.nvim_set_current_buf(buffer)
 
-    buffer_autocmds[buffer] = function()
+    local on_close = function()
         local buf_elements = vim.tbl_filter(
             function(line) return not vim.startswith(line, "#") end, -- filter out comment lines
             api.nvim_buf_get_lines(buffer, 0, -1, false))
@@ -818,8 +575,8 @@ function M.multi_rename(mode)
                             renamed_counter = renamed_counter + 1
 
                             if mode == 'clipboard' then
-                                M.clipboard[old_element] = nil
-                                M.clipboard[new_element] = true
+                                clipboard.clipboard[old_element] = nil
+                                clipboard.clipboard[new_element] = true
                             end
                         end
                     end
@@ -833,16 +590,17 @@ function M.multi_rename(mode)
                 end
             end
         end
-
-        buffer_autocmds[buffer] = nil
     end
 
-    vim.cmd(table.concat({
-        'augroup DrexRenameBuffer',
-            'autocmd! * <buffer>',
-            'autocmd BufUnload <buffer> lua require("drex.actions").call_buf_autocmd(' .. buffer .. ')',
-        'augroup END',
-    }, '\n'))
+    api.nvim_clear_autocmds {
+        group = rename_group,
+        buffer = buffer,
+    }
+    api.nvim_create_autocmd('BufUnload', {
+        group = rename_group,
+        buffer = buffer,
+        callback = on_close,
+    })
 end
 
 ---Rename the element under the cursor
@@ -860,16 +618,16 @@ function M.rename()
     local success, error = rename_element(old_element, new_element)
 
     if success then
-        if M.clipboard[old_element] then
-            M.clipboard[old_element] = nil
-            M.clipboard[new_element] = true
+        if clipboard.clipboard[old_element] then
+            clipboard.clipboard[old_element] = nil
+            clipboard.clipboard[new_element] = true
             utils.reload_drex_syntax()
         end
 
         -- if the renamed element is in scope of the current DREX buffer, focus it
         if vim.startswith(new_element, utils.get_root_path(0)) then
             local window = api.nvim_get_current_win()
-            local focus_fn = function() require('drex').focus_element(window, new_element) end
+            local focus_fn = function() require('drex.actions.elements').focus_element(window, new_element) end
 
             if not fs.post_next_reload(
                 vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
@@ -948,7 +706,7 @@ function M.create(dest_path)
     -- if the newly created element is in scope of the current DREX buffer, focus it
     if vim.startswith(new_element, utils.get_root_path(0)) then
         local window = api.nvim_get_current_win()
-        local focus_fn = function() require('drex').focus_element(window, new_element) end
+        local focus_fn = function() require('drex.actions.elements').focus_element(window, new_element) end
 
         if not fs.post_next_reload(existing_base_path, api.nvim_get_current_buf(), focus_fn) then
             focus_fn()
@@ -978,7 +736,7 @@ function M.delete(mode)
     end
 
     if mode == 'clipboard' then
-        elements = get_clipboard_entries('asc')
+        elements = clipboard.get_clipboard_entries('asc')
         if #elements == 0 then
             vim.notify('The clipboard is empty! There is nothing to delete...', vim.log.levels.INFO, { title = 'DREX' })
             return true
@@ -1033,7 +791,7 @@ function M.delete(mode)
         end
 
         delete_counter = delete_counter + 1
-        M.clipboard[element] = nil
+        clipboard.clipboard[element] = nil
 
         -- delete corresponding (and loaded) buffer
         for _, buf in ipairs(api.nvim_list_bufs()) do
@@ -1051,158 +809,6 @@ function M.delete(mode)
     clear_matches()
     utils.reload_drex_syntax()
     return true
-end
-
----Print file/directory details for the current element
---- - created, accessed and modified time
---- - file size
---- - permissions
-function M.stats()
-    utils.check_if_drex_buffer(0)
-
-    local element = utils.get_element(api.nvim_get_current_line())
-    local details = luv.fs_lstat(element)
-
-    if not details then
-        vim.notify("Could not read details for '" .. element .. "'!", vim.log.levels.ERROR, { title = 'DREX' })
-        return
-    end
-
-    local created  = os.date('%c', details.birthtime.sec)
-    local accessed = os.date('%c', details.atime.sec)
-    local modified = os.date('%c', details.mtime.sec)
-
-    -- convert file/directory size in bytes into human readable format (SI)
-    -- source: https://stackoverflow.com/a/3758880
-    local size
-    local bytes = details.size
-    if details.size > -1000 and details.size < 1000 then
-        size = bytes .. 'B'
-    else
-        local index = 1
-        -- kilo, mega, giga, tera, peta, exa
-        local prefixes = { 'k', 'M', 'G', 'T', 'P', 'E' }
-        while bytes <= -999950 or bytes >= 999950 do
-            bytes = bytes / 1000
-            index = index + 1
-        end
-        size = string.format('%.1f%sB', bytes / 1000, prefixes[index])
-    end
-
-    -- format positive byte size with decimal delimiters
-    -- e.g. 123456789 --> 123,456,789
-    -- source: https://stackoverflow.com/a/11005263
-    local formatted_byte_size = tostring(details.size):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
-
-    -- mask off the file type portion of mode (using 07777)
-    -- print as octal number to see the real permissions
-    local mode = string.format('%o', bit.band(details.mode, tonumber('07777', 8)))
-
-    -- cycle through the mode digits to extract the access permissions (read, write & execute)
-    -- for every class (user, group & others) into a single human readable string
-    -- for example:
-    -- --> mode = 664
-    -- --> access_permissions = rw-rw-r--
-    local access_permissions = ''
-    for c in mode:gmatch('.') do
-        local num = tonumber(c)
-        local class = ''
-
-        -- check for "read" access
-        if (num - 4) >= 0 then
-            class = class .. 'r'
-            num = num - 4
-        else
-            class = class .. '-'
-        end
-
-        -- check for "write" access
-        if (num - 2) >= 0 then
-            class = class .. 'w'
-            num = num - 2
-        else
-            class = class .. '-'
-        end
-
-        -- check for "execute" access
-        if (num - 1) >= 0 then
-            class = class .. 'x'
-            num = num - 1
-        else
-            class = class .. '-'
-        end
-
-        access_permissions = access_permissions .. class
-    end
-
-    utils.echo(table.concat({
-        'Details for ' .. details.type .. " '" .. element .. "'",
-        ' ',
-        'Size:         ' .. size .. ' (' .. formatted_byte_size .. ' bytes)',
-        'Permissions:  ' .. access_permissions .. ' (' .. mode .. ')',
-        'Created:      ' .. created,
-        'Accessed:     ' .. accessed,
-        'Modified:     ' .. modified,
-    }, '\n'))
-end
-
--- ####################################
--- ### string copy functions
--- ####################################
-
----Helper function to copy element string to the clipboard
----@param selection boolean If `true` use the last selection, if `false` only operate on the current line
----@param extract_fn function Function that should be used to extract the desired string value to copy
-local function copy_element_strings(selection, extract_fn)
-    local lines = {}
-    if selection then
-        local startRow, endRow = utils.get_visual_selection()
-        for row = startRow, endRow, 1 do
-            table.insert(lines, extract_fn(vim.fn.getline(row)))
-        end
-        vim.notify('Copied ' .. (endRow - startRow + 1) .. ' values to text clipboard', vim.log.levels.INFO, { title = 'DREX' })
-    else
-        local line_value = extract_fn(api.nvim_get_current_line())
-        table.insert(lines, line_value)
-        vim.notify("Copied '" .. line_value .. "' to text clipboard", vim.log.levels.INFO, { title = 'DREX' })
-    end
-
-    local value = table.concat(lines, '\n')
-
-    -- use "charwise" for single lines
-    -- use "linewise" for visual selections
-    local mode = selection and 'l' or 'c'
-
-    vim.fn.setreg('"', value, mode)
-    vim.fn.setreg('*', value, mode)
-    vim.fn.setreg('+', value, mode)
-end
-
----Copy the element name
----@param selection boolean Indicator if called from visual mode (if so use last selection)
-function M.copy_element_name(selection)
-    utils.check_if_drex_buffer(0)
-    copy_element_strings(selection, utils.get_name)
-end
-
----Copy the elements path relative to the current root path
----@param selection boolean Indicator if called from visual mode (if so use last selection)
-function M.copy_element_relative_path(selection)
-    utils.check_if_drex_buffer(0)
-    local root_path = utils.get_root_path(0)
-    copy_element_strings(selection, function(str)
-        local name = utils.get_name(str)
-        local path = utils.get_path(str)
-        local rel_path = path:gsub(vim.pesc(root_path), '')
-        return rel_path .. name
-    end)
-end
-
----Copy the absolute elements path
----@param selection boolean Indicator if called from visual mode (if so use last selection)
-function M.copy_element_absolute_path(selection)
-    utils.check_if_drex_buffer(0)
-    copy_element_strings(selection, utils.get_element)
 end
 
 return M
