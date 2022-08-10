@@ -136,7 +136,7 @@ function M.reload_directory(buffer, path)
         return
     end
 
-    local elements = require('drex.actions.elements')
+    local elements = require('drex.elements')
     -- check if the buffer content has been erased and reload if necessary
     if load_buffer_content(buffer) then
         -- if we had to reset the whole buffer content we can abort here

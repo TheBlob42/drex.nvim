@@ -5,7 +5,7 @@ local luv = vim.loop
 
 local fs = require('drex.fs')
 local utils = require('drex.utils')
-local clipboard = require('drex.actions.clipboard')
+local clipboard = require('drex.clipboard')
 
 -- augroup for the multi rename buffer
 local rename_group = api.nvim_create_augroup('DrexRenameBuffer', {})
@@ -460,7 +460,7 @@ local function paste(move)
             local new_element = pasted_elements[1]
             local window = api.nvim_get_current_win()
             local focus_fn = function()
-                require('drex.actions.elements').focus_element(window, new_element)
+                require('drex.elements').focus_element(window, new_element)
             end
 
             if not fs.post_next_reload(vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
@@ -627,7 +627,7 @@ function M.rename()
         -- if the renamed element is in scope of the current DREX buffer, focus it
         if vim.startswith(new_element, utils.get_root_path(0)) then
             local window = api.nvim_get_current_win()
-            local focus_fn = function() require('drex.actions.elements').focus_element(window, new_element) end
+            local focus_fn = function() require('drex.elements').focus_element(window, new_element) end
 
             if not fs.post_next_reload(
                 vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
@@ -706,7 +706,7 @@ function M.create(dest_path)
     -- if the newly created element is in scope of the current DREX buffer, focus it
     if vim.startswith(new_element, utils.get_root_path(0)) then
         local window = api.nvim_get_current_win()
-        local focus_fn = function() require('drex.actions.elements').focus_element(window, new_element) end
+        local focus_fn = function() require('drex.elements').focus_element(window, new_element) end
 
         if not fs.post_next_reload(existing_base_path, api.nvim_get_current_buf(), focus_fn) then
             focus_fn()

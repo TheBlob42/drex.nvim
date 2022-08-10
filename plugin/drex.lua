@@ -9,7 +9,7 @@ end
 local drex = require('drex')
 local utils = require('drex.utils')
 local drawer = require('drex.drawer')
-local clipboard = require('drex.actions.clipboard')
+local clipboard = require('drex.clipboard')
 
 -- ~~~~~~~~~~~~~~~~
 -- ~ user commands
