@@ -9,7 +9,7 @@ end
 local drex = require('drex')
 local utils = require('drex.utils')
 local drawer = require('drex.drawer')
-local actions = require('drex.actions')
+local clipboard = require('drex.actions.clipboard')
 
 -- ~~~~~~~~~~~~~~~~
 -- ~ user commands
@@ -48,21 +48,21 @@ end, {
 })
 
 vim.api.nvim_create_user_command('DrexMark', function(args)
-    actions.mark(args.line1, args.line2)
+    clipboard.mark(args.line1, args.line2)
 end, {
     desc = 'Mark the element(s) and add them to the DREX clipboard',
     range = true,
 })
 
 vim.api.nvim_create_user_command('DrexUnmark', function(args)
-    actions.unmark(args.line1, args.line2)
+    clipboard.unmark(args.line1, args.line2)
 end, {
     desc = 'Unmark the element(s) and remove them from the DREX clipboard',
     range = true,
 })
 
 vim.api.nvim_create_user_command('DrexToggle', function(args)
-    actions.toggle(args.line1, args.line2)
+    clipboard.toggle(args.line1, args.line2)
 end, {
     desc = 'Toggle the element(s) and add or remove them from the DREX clipboard',
     range = true,
