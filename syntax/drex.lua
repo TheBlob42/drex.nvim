@@ -4,7 +4,7 @@ end
 
 local utils = require('drex.utils')
 local config = require('drex.config')
-local clipboard = require('drex.actions.clipboard').clipboard
+local clipboard = require('drex.clipboard').clipboard
 
 local esc = utils.vim_escape
 local sep = utils.path_separator

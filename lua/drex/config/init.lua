@@ -38,19 +38,19 @@ local defaults = {
             -- always use visual mode linewise for better visibility
             ['v'] = 'V',
             -- open/close directories
-            ['l'] = '<cmd>lua require("drex.actions.elements").expand_element()<CR>',
-            ['h'] = '<cmd>lua require("drex.actions.elements").collapse_directory()<CR>',
-            ['<right>'] = '<cmd>lua require("drex.actions.elements").expand_element()<CR>',
-            ['<left>']  = '<cmd>lua require("drex.actions.elements").collapse_directory()<CR>',
-            ['<2-LeftMouse>'] = '<LeftMouse><cmd>lua require("drex.actions.elements").expand_element()<CR>',
-            ['<RightMouse>']  = '<LeftMouse><cmd>lua require("drex.actions.elements").collapse_directory()<CR>',
+            ['l'] = '<cmd>lua require("drex.elements").expand_element()<CR>',
+            ['h'] = '<cmd>lua require("drex.elements").collapse_directory()<CR>',
+            ['<right>'] = '<cmd>lua require("drex.elements").expand_element()<CR>',
+            ['<left>']  = '<cmd>lua require("drex.elements").collapse_directory()<CR>',
+            ['<2-LeftMouse>'] = '<LeftMouse><cmd>lua require("drex.elements").expand_element()<CR>',
+            ['<RightMouse>']  = '<LeftMouse><cmd>lua require("drex.elements").collapse_directory()<CR>',
             -- open files in separate windows/tabs
-            ['<C-v>'] = '<cmd>lua require("drex.actions.elements").open_file("vs")<CR>',
-            ['<C-x>'] = '<cmd>lua require("drex.actions.elements").open_file("sp")<CR>',
-            ['<C-t>'] = '<cmd>lua require("drex.actions.elements").open_file("tabnew", true)<CR>',
+            ['<C-v>'] = '<cmd>lua require("drex.elements").open_file("vs")<CR>',
+            ['<C-x>'] = '<cmd>lua require("drex.elements").open_file("sp")<CR>',
+            ['<C-t>'] = '<cmd>lua require("drex.elements").open_file("tabnew", true)<CR>',
             -- switch root directory
-            ['<C-l>'] = '<cmd>lua require("drex.actions.elements").open_directory()<CR>',
-            ['<C-h>'] = '<cmd>lua require("drex.actions.elements").open_parent_directory()<CR>',
+            ['<C-l>'] = '<cmd>lua require("drex.elements").open_directory()<CR>',
+            ['<C-h>'] = '<cmd>lua require("drex.elements").open_parent_directory()<CR>',
             -- manual reload
             ['<F5>'] = '<cmd>lua require("drex").reload_directory()<CR>',
             -- jump around elements
@@ -70,8 +70,8 @@ local defaults = {
             ['M'] = '<cmd>DrexMark<CR>',
             ['u'] = '<cmd>DrexUnmark<CR>',
             ['m'] = '<cmd>DrexToggle<CR>',
-            ['cc'] = '<cmd>lua require("drex.actions.clipboard").clear_clipboard()<CR>',
-            ['cs'] = '<cmd>lua require("drex.actions.clipboard").open_clipboard_window()<CR>',
+            ['cc'] = '<cmd>lua require("drex.clipboard").clear_clipboard()<CR>',
+            ['cs'] = '<cmd>lua require("drex.clipboard").open_clipboard_window()<CR>',
             -- string copy utilities
             ['y'] = '<cmd>lua require("drex.actions.text").copy_name()<CR>',
             ['Y'] = '<cmd>lua require("drex.actions.text").copy_relative_path()<CR>',
