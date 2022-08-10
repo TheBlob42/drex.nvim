@@ -6,63 +6,64 @@ if vim.g.loaded_drex then
     return
 end
 
-local drex = require('drex')
-local utils = require('drex.utils')
-local drawer = require('drex.drawer')
-local clipboard = require('drex.clipboard')
-
 -- ~~~~~~~~~~~~~~~~
 -- ~ user commands
 -- ~~~~~~~~~~~~~~~~
 
 vim.api.nvim_create_user_command('Drex', function(args)
-    drex.open_directory_buffer(args.args)
+    require('drex').open_directory_buffer(args.args)
 end, {
     desc = 'Open a DREX buffer',
     nargs = '?',
     complete = 'dir',
 })
 
-vim.api.nvim_create_user_command('DrexDrawerOpen', drawer.open, {
+vim.api.nvim_create_user_command('DrexDrawerOpen', function()
+    require('drex.drawer').open()
+end, {
     desc = 'Open and focus the DREX drawer window'
 })
 
-vim.api.nvim_create_user_command('DrexDrawerClose', drawer.close, {
+vim.api.nvim_create_user_command('DrexDrawerClose', function()
+    require('drex.drawer').close()
+end, {
     desc = 'Close the DREX drawer window'
 })
 
-vim.api.nvim_create_user_command('DrexDrawerToggle', drawer.toggle, {
+vim.api.nvim_create_user_command('DrexDrawerToggle', function()
+    require('drex.drawer').toggle()
+end, {
     desc = 'Toggle the DREX drawer window'
 })
 
 vim.api.nvim_create_user_command('DrexDrawerFindFile', function()
-    drawer.find_element('%', false, true)
+    require('drex.drawer').find_element('%', false, true)
 end, {
     desc = 'Jump to the current file in the DREX drawer window'
 })
 
 vim.api.nvim_create_user_command('DrexDrawerFindFileAndFocus', function()
-    drawer.find_element('%', true, true)
+    require('drex.drawer').find_element('%', true, true)
 end, {
     desc = 'Jump to the current file in the DREX drawer window and focus it'
 })
 
 vim.api.nvim_create_user_command('DrexMark', function(args)
-    clipboard.mark(args.line1, args.line2)
+    require('drex.actions.clipboard').mark(args.line1, args.line2)
 end, {
     desc = 'Mark the element(s) and add them to the DREX clipboard',
     range = true,
 })
 
 vim.api.nvim_create_user_command('DrexUnmark', function(args)
-    clipboard.unmark(args.line1, args.line2)
+    require('drex.actions.clipboard').unmark(args.line1, args.line2)
 end, {
     desc = 'Unmark the element(s) and remove them from the DREX clipboard',
     range = true,
 })
 
 vim.api.nvim_create_user_command('DrexToggle', function(args)
-    clipboard.toggle(args.line1, args.line2)
+    require('drex.actions.clipboard').toggle(args.line1, args.line2)
 end, {
     desc = 'Toggle the element(s) and add or remove them from the DREX clipboard',
     range = true,
@@ -77,7 +78,7 @@ vim.api.nvim_create_autocmd('SessionLoadPost', {
     pattern = 'drex://*',
     nested = true,
     callback = function()
-        drex.open_directory_buffer(utils.get_root_path())
+        require('drex').open_directory_buffer(require('drex.utils').get_root_path())
     end,
 })
 
