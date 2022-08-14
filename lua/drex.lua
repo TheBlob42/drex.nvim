@@ -38,14 +38,11 @@ end
 
 ---Set sane local defaults when entering a DREX buffer
 local function on_enter()
-    -- not using `vim.opt_local` here because: https://github.com/neovim/neovim/issues/14670
-    vim.cmd [[
-        setlocal nowrap            " wrap and conceal don't play well together
-        setlocal cursorline        " make the selected line better visible
-        setlocal conceallevel=3    " hide full path completely
-        setlocal concealcursor=nvc " don't reveal full path on cursor
-        setlocal nospell           " spell checking is usually just annoying
-    ]]
+    vim.opt_local.wrap = false          -- wrap and conceal don't play well together
+    vim.opt_local.cursorline = true     -- make the selected line better visible
+    vim.opt_local.conceallevel = 3      -- hide full path completely
+    vim.opt_local.concealcursor = 'nvc' -- don't reveal full path on cursor
+    vim.opt_local.spell = false         -- spell checking is usually just annoying
 
     if config.options.on_enter then
         config.options.on_enter()
