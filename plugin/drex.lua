@@ -49,21 +49,21 @@ end, {
 })
 
 vim.api.nvim_create_user_command('DrexMark', function(args)
-    require('drex.actions.clipboard').mark(args.line1, args.line2)
+    require('drex.clipboard').mark(args.line1, args.line2)
 end, {
     desc = 'Mark the element(s) and add them to the DREX clipboard',
     range = true,
 })
 
 vim.api.nvim_create_user_command('DrexUnmark', function(args)
-    require('drex.actions.clipboard').unmark(args.line1, args.line2)
+    require('drex.clipboard').unmark(args.line1, args.line2)
 end, {
     desc = 'Unmark the element(s) and remove them from the DREX clipboard',
     range = true,
 })
 
 vim.api.nvim_create_user_command('DrexToggle', function(args)
-    require('drex.actions.clipboard').toggle(args.line1, args.line2)
+    require('drex.clipboard').toggle(args.line1, args.line2)
 end, {
     desc = 'Toggle the element(s) and add or remove them from the DREX clipboard',
     range = true,
