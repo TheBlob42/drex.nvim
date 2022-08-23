@@ -27,6 +27,7 @@ drex-default-keybindings	drex.txt	/*drex-default-keybindings*
 drex-features	drex.txt	/*drex-features*
 drex-highlight	drex.txt	/*drex-highlight*
 drex-installation	drex.txt	/*drex-installation*
+drex-lualine-extension	drex.txt	/*drex-lualine-extension*
 drex-usage	drex.txt	/*drex-usage*
 drex-window-picker	drex.txt	/*drex-window-picker*
 drex.txt	drex.txt	/*drex.txt*

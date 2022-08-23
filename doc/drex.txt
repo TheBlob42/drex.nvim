@@ -506,4 +506,16 @@ COMMANDS                                                       *drex-commands*
 	the DREX clipboard).
 
 ==============================================================================
+LUALINE                                               *drex-lualine-extension*
+
+If your using `lualine` (https://github.com/nvim-lualine/lualine.nvim) you can
+activate the custom DREX extension which shows the shortened directory path
+and the count of items in the current clipboard.
+>
+	require('lualine').setup {
+		extensions = { 'drex' },
+		[...]
+	}
+<
+==============================================================================
 vim:tw=78:sw=4:ts=4:noet:ft=help:norl
