@@ -6,7 +6,7 @@ local short_path = function()
 end
 
 local clipboard_entries = function()
-    return vim.tbl_count(require('drex.actions').clipboard)
+    return vim.tbl_count(require('drex.clipboard').clipboard)
 end
 
 M.sections = {
