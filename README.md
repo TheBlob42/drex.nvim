@@ -1,5 +1,8 @@
 # DREX
 
+> This branch is only a snapshot for compatibility reasons with Neovim version 0.5  
+> It will not get any more updates in the future. Please switch to the `main` branch for the latest updates
+
 Another **D**i**R**ectory **EX**plorer for Neovim
 
 ![drex](./assets/drex.png)
