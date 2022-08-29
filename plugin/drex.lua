@@ -1,4 +1,5 @@
 if vim.fn.has('nvim-0.7') ~= 1 then
+    vim.notify('Your version of drex.nvim does not support Neovim version < 0.7\nPlease see `:h drex-announcement` for more information', vim.log.levels.ERROR, {})
     return
 end
 

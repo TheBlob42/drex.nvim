@@ -520,4 +520,18 @@ and the count of items in the current clipboard.
 	}
 <
 ==============================================================================
+ANNOUNCEMENT                                               *drex-announcement*
+
+With the commit `03893ebeba056b27106d769cd5340da64af9238b` DREX does
+not support any Neovim version prior to 0.7 anymore. To "fix" the issue for
+you there are three possibilities:
+
+- upgrade your Neovim version
+- switch to the `nvim-0.5` branch
+- pin the previous commit using your package manager:
+  `2d895a0a78702bd055bd12cbca55f028158f0cd3`
+
+NOTE: This announcement will be removed by the end of the year 2022
+
+==============================================================================
 vim:tw=78:sw=4:ts=4:noet:ft=help:norl
