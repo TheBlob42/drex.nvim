@@ -349,6 +349,24 @@ You can add or overwrite existing keybindings:
 		}
 	}
 <
+By default the keybindings are set using |vim.keymap.set()| with the options
+|:map-silent| and |:map-nowait|, but you can add or overwrite options by
+passing your keybindings as a table (first element is the binding, second
+element are your options):
+>
+	keybindings = {
+		['n'] = {
+			['o'] = {
+				'<cmd>echo "Your command"<cr>',
+				{ desc = 'your command', silent = false }
+			},
+			['O'] = {
+				function() return "..." end,
+				{ desc = 'your function', expr = true }
+			},
+		}
+	}
+<
 You can disable a specific keybinding by setting its value to `false`:
 >
 	keybindings = {
