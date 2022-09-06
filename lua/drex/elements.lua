@@ -251,7 +251,7 @@ function M.open_file(pre, change_tab)
 
         -- in case the drawer window is the last window of the current tabpage
         if api.nvim_get_current_win() == win then
-            vim.cmd('vsplit')
+            vim.cmd('rightbelow vsplit')
             require('drex.drawer').set_width(0, true, true)
         end
     end
