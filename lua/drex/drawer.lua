@@ -44,6 +44,11 @@ end
 ---Close the drawer window (if currently open)
 function M.close()
     if M.get_drawer_window() then
+        if vim.tbl_count(api.nvim_list_wins()) == 1 then
+            utils.echo("You can't close the DREX drawer if it is the last editor window (see ':h E444')", false, 'WarningMsg')
+            return
+        end
+
         local tab = api.nvim_get_current_tabpage()
         api.nvim_win_close(drawer_windows[tab], false)
         drawer_windows[tab] = nil
