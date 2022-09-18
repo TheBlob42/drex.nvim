@@ -161,7 +161,10 @@ function M.open_clipboard_window()
     api.nvim_create_autocmd('WinLeave', {
         group = clipboard_group,
         buffer = buffer,
-        callback = on_close,
+        nested = true, -- trigger nested "BufUnload" event
+        callback = function()
+            api.nvim_win_close(clipboard_win, true)
+        end,
     })
     api.nvim_create_autocmd('BufUnload', {
         group = clipboard_group,
