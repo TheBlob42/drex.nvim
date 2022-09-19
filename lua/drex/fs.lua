@@ -158,10 +158,10 @@ function M.watch_directory(buffer, path)
                     end
                 end
 
-                local clipboard = require('drex.clipboard').clipboard
-                for element, _ in pairs(clipboard) do
+                local clipboard = require('drex.clipboard')
+                for element, _ in pairs(clipboard.clipboard) do
                     if vim.startswith(element, path) then
-                        clipboard[element] = nil
+                        clipboard.delete_from_clipboard(element)
                     end
                 end
 
@@ -185,11 +185,11 @@ function M.watch_directory(buffer, path)
             end
 
             -- check clipboard for elements that have been renamed or deleted outside of Neovim
-            local clipboard = require('drex.clipboard').clipboard
-            for element, _ in pairs(clipboard) do
+            local clipboard = require('drex.clipboard')
+            for element, _ in pairs(clipboard.clipboard) do
                 if vim.startswith(element, path) then
                     if not luv.fs_lstat(element) then
-                        clipboard[element] = nil
+                        clipboard.delete_from_clipboard(element)
                     end
                 end
             end
