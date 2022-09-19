@@ -416,8 +416,8 @@ local function paste(move)
         if move then
             local renamed_element, error = rename_element(element, new_element)
             if renamed_element then
-                clipboard.clipboard[element] = nil
-                clipboard.clipboard[renamed_element] = true
+                clipboard.delete_from_clipboard(element)
+                clipboard.add_to_clipboard(renamed_element)
                 table.insert(pasted_elements, renamed_element)
             else
                 table.insert(errors_found, error)
@@ -575,8 +575,8 @@ function M.multi_rename(mode)
                             renamed_counter = renamed_counter + 1
 
                             if mode == 'clipboard' then
-                                clipboard.clipboard[old_element] = nil
-                                clipboard.clipboard[new_element] = true
+                                clipboard.delete_from_clipboard(old_element)
+                                clipboard.add_to_clipboard(new_element)
                             end
                         end
                     end
@@ -619,8 +619,8 @@ function M.rename()
 
     if success then
         if clipboard.clipboard[old_element] then
-            clipboard.clipboard[old_element] = nil
-            clipboard.clipboard[new_element] = true
+            clipboard.delete_from_clipboard(old_element)
+            clipboard.add_to_clipboard(new_element)
             utils.reload_drex_syntax()
         end
 
@@ -791,7 +791,7 @@ function M.delete(mode)
         end
 
         delete_counter = delete_counter + 1
-        clipboard.clipboard[element] = nil
+        clipboard.delete_from_clipboard(element)
 
         -- delete corresponding (and loaded) buffer
         for _, buf in ipairs(api.nvim_list_bufs()) do

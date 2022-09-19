@@ -14,6 +14,30 @@ function M.clear_clipboard()
     utils.reload_drex_syntax()
 end
 
+---Add `element` to the DREX clipboard
+---Check first if the element actually exists and only add if so
+---@param element string
+---@return boolean `true` if the element was successfully added, `false` otherwise
+function M.add_to_clipboard(element)
+    local added = false
+    if luv.fs_lstat(element) then
+        M.clipboard[element] = true
+        added = true
+    end
+    return added
+end
+
+---Remove `element` from the DREX clipboard
+---@param element string
+---@return boolean `true` if the element was successfully removed, `false` otherwise
+function M.delete_from_clipboard(element)
+    local removed = false
+    if M.clipboard[element] then
+        M.clipboard[element] = nil
+        removed = true
+    end
+    return removed
+end
 ---Return all elements currently contained in the DREX clipboard
 ---You can specify a sort order ('asc' or 'desc'), otherwise the elements might be returned in any order
 ---
@@ -185,7 +209,7 @@ function M.mark(startRow, endRow)
 
     for row = startRow, endRow, 1 do
         local element = utils.get_element(vim.fn.getline(row))
-        M.clipboard[element] = true
+        M.add_to_clipboard(element)
     end
 
     utils.reload_drex_syntax()
@@ -203,7 +227,7 @@ function M.unmark(startRow, endRow)
 
     for row = startRow, endRow, 1 do
         local element = utils.get_element(vim.fn.getline(row))
-        M.clipboard[element] = nil
+        M.delete_from_clipboard(element)
     end
 
     utils.reload_drex_syntax()
@@ -223,7 +247,11 @@ function M.toggle(startRow, endRow)
 
     for row = startRow, endRow, 1 do
         local element = utils.get_element(vim.fn.getline(row))
-        M.clipboard[element] = not M.clipboard[element] or nil
+        if M.clipboard[element] then
+            M.delete_from_clipboard(element)
+        else
+            M.add_to_clipboard(element)
+        end
     end
 
     utils.reload_drex_syntax()
