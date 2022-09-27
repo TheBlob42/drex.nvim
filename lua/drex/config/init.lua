@@ -66,6 +66,8 @@ local defaults = {
             ['P'] = { '<cmd>lua require("drex.actions.files").cut_and_move()<CR>', { desc = 'cut & move (clipboard)' }},
             ['r'] = { '<cmd>lua require("drex.actions.files").rename()<CR>', { desc = 'rename element' }},
             ['R'] = { '<cmd>lua require("drex.actions.files").multi_rename("clipboard")<CR>', { desc = 'rename (clipboard)' }},
+            -- search
+            ['/'] = { '<cmd>keepalt lua require("drex.actions.search").search()<CR>', { desc = 'search' }},
             -- add/remove elements from clipboard
             ['M'] = { '<cmd>DrexMark<CR>', { desc = 'mark element' }},
             ['u'] = { '<cmd>DrexUnmark<CR>', { desc = 'unmark element' }},

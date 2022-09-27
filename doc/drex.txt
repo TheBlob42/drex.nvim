@@ -93,7 +93,7 @@ Clipboard~
 - `cc` clears the clipboard content
 - `cs` to show and edit the content of the clipboard in a floating window
 
-Actions~
+File Actions~
 
 - `s` shows the stats for the current element
 - `a` creates a new file or directory
@@ -110,6 +110,10 @@ Actions~
   - non-existent parent directories will be created
     (e.g. `foo/bar/file` will create `foo` and `bar` if they don't exist yet)
 - `R` to multi rename all elements from the clipboard
+
+Search~
+
+- `/` searches for visible elements (see |drex-search|)
 
 Copy strings~
 
@@ -185,6 +189,7 @@ However you may configure certain settings to your liking.
 				['P'] = { '<cmd>lua require("drex.actions.files").cut_and_move()<CR>', { desc = 'cut & move (clipboard)' }},
 				['r'] = { '<cmd>lua require("drex.actions.files").rename()<CR>', { desc = 'rename element' }},
 				['R'] = { '<cmd>lua require("drex.actions.files").multi_rename("clipboard")<CR>', { desc = 'rename (clipboard)' }},
+				['/'] = { '<cmd>keepalt lua require("drex.actions.search").search()<CR>', { desc = 'search' }},
 				['M'] = { '<cmd>DrexMark<CR>', { desc = 'mark element' }},
 				['u'] = { '<cmd>DrexUnmark<CR>', { desc = 'unmark element' }},
 				['m'] = { '<cmd>DrexToggle<CR>', { desc = 'toggle element' }},
@@ -408,6 +413,137 @@ use:
 	end
 <
 
+==============================================================================
+SEARCH                                                           *drex-search*
+
+DREX provides basic search functionality for finding and filtering of specific
+elements. In comparison to the basic |/| or |:g| alternatives the search only
+operates on the element names (and not its concealed part).
+
+NOTE: The search only operates on visible elements in the current DREX buffer
+
+The default keybinding for the search is set to `/` but you can also call the
+corresponding function directly with your own specific configuration:
+>
+	require('drex.actions.search').search {
+		-- your configuration
+	}
+<
+------------------------------------------------------------------------------
+SEARCH CONFIGURATION                               *drex-search-configuration*
+
+If you don't call the `search` function with a custom configuration the
+following defaults are used:
+>
+	{
+		fuzzy = true,
+		case_sensitive = false,
+		keybindings = {
+			['<C-n>'] = require('drex.actions.search').actions.goto_next,
+			['<C-p>'] = require('drex.actions.search').actions.goto_prev,
+			['<CR>']  = require('drex.actions.search').actions.jump,
+			['<ESC>'] = require('drex.actions.search').actions.close,
+			['<C-c>'] = require('drex.actions.search').actions.close,
+			['<BS>']  = require('drex.actions.search').actions.backspace,
+			['<A-m>'] = require('drex.actions.search').actions.mark_all,
+	   }
+	}
+<
+- `fuzzy` - (de)activate fuzzy matching
+- `case_sensitive` - (de)activate case sensitive matching (for normal letters)
+- `keybindings` - keybindings to execute other search related actions
+
+------------------------------------------------------------------------------
+SEARCH KEYBINDINGS                                   *drex-search-keybindings*
+
+You can easily adopt and enhance the keybindings used for the DREX search
+action by providing your own configuration.
+>
+	{
+		keybindings = {
+			-- add a completely new keybinding
+			['<Down>'] = require('drex.actions.search').actions.goto_next,
+
+			-- overwrite an existing keybinding (with a custom function)
+			['<C-p>'] = function(args)
+				...
+			end,
+
+			-- disable a default kebinding
+			['<A-m>'] = false,
+		}
+	}
+<
+- You can only map single keys.
+  Keybindings which consist of multiple keys are not supported.
+- You can only map lua functions.
+  String mappings are not applicable.
+
+Check `require('drex.actions.search').actions` to find a collection of default
+actions to use directly or for your inspiration:
+
+- `goto_next`	Move the cursor to the next search hit
+- `goto_prev`	Move the cursor to the previous search hit
+- `jump`		End search and jump to the selected element
+- `close`		Abort the search
+- `backspace`	Delete the last entered character of the search input
+- `mark_all`	Add all filtered elements to the DREX clipboard
+
+CUSTOM KEYBINDINGS~
+
+You can map your custom lua functions to operate on the given search results.
+Every mapped functions get passed an `args` table with the following keys:
+
+- `input`	The current search input string
+- `src_buf`   The original DREX buffer from which the search was initiated
+
+NOTE: To get all current search hits use |nvim_buf_get_lines()|
+NOTE: To get the current selected hit use |nvim_get_current_line()|
+
+Your custom function does not need to return anything. But you can use the
+following return types to influence the search behavior:
+
+- Return a string to replace the current search input
+- Return `true` to end the search after your action
+
+EXAMPLES~
+
+Delete the whole search input at once. If the search input is already empty
+end the search instead:
+>
+	require('drex.actions.search').search {
+		keybindings = {
+			['<A-BS>'] = function(args)
+				-- end the search if the input is empty
+				if #args.input == 0 then
+					return true
+				end
+
+				return '' -- clear the search input
+			end,
+		}
+	}
+<
+Replace the search input with the content of a register:
+>
+	local function paste_from_register(_)
+		vim.cmd('redraw')
+		vim.cmd('echo "Which register? "')
+
+		local reg = vim.fn.getreginfo(vim.fn.getcharstr())
+		if vim.tbl_isempty(reg) then
+			return
+		end
+
+		return reg.regcontents[1] -- to deal with multiline registers
+	end
+
+	require('drex.actions.search').search {
+		keybindings = {
+			['<C-r>'] = paste_from_register
+		}
+	}
+<
 ==============================================================================
 HIGHLIGHT                                                     *drex-highlight*
 
