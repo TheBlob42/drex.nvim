@@ -104,7 +104,7 @@ DREX also comes with a simple project drawer functionality
 - `cc` clears the clipboard content
 - `cs` to show and edit the content of the clipboard in a floating window
 
-**Actions**
+**File actions**
 
 - `s` shows the stats for the current element
 - `a` creates a new file or directory
@@ -121,6 +121,10 @@ DREX also comes with a simple project drawer functionality
   - non-existent parent directories will be created
     (e.g. `foo/bar/file` will create `foo` and `bar` if they don't exist yet)
 - `R` to multi rename all elements from the clipboard
+
+**Search**
+
+- `/` search for visible elements (see `:help drex-search`)
 
 **Copy strings**
 
@@ -200,6 +204,7 @@ require('drex.config').configure {
             ['P'] = { '<cmd>lua require("drex.actions.files").cut_and_move()<CR>', { desc = 'cut & move (clipboard)' }},
             ['r'] = { '<cmd>lua require("drex.actions.files").rename()<CR>', { desc = 'rename element' }},
             ['R'] = { '<cmd>lua require("drex.actions.files").multi_rename("clipboard")<CR>', { desc = 'rename (clipboard)' }},
+            ['/'] = { '<cmd>keepalt lua require("drex.actions.search").search()<CR>', { desc = 'search' }},
             ['M'] = { '<cmd>DrexMark<CR>', { desc = 'mark element' }},
             ['u'] = { '<cmd>DrexUnmark<CR>', { desc = 'unmark element' }},
             ['m'] = { '<cmd>DrexToggle<CR>', { desc = 'toggle element' }},
