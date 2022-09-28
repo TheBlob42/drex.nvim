@@ -86,6 +86,8 @@ function M.actions.mark_all()
         clipboard.add_to_clipboard(utils.get_element(line))
     end
 
+    utils.reload_drex_syntax()
+
     return true
 end
 
