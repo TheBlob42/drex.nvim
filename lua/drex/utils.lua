@@ -188,12 +188,13 @@ function M.get_root_path(buffer)
     return buf_name:match("^drex://(.*)$")
 end
 
----Reload the syntax option in all currently visible DREX buffer
+---Reload the syntax option in all DREX buffers
 function M.reload_drex_syntax()
-    for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-        local buffer = api.nvim_win_get_buf(win)
-        if api.nvim_buf_get_option(buffer, 'filetype') == 'drex' then
-            api.nvim_buf_call(buffer, function() vim.cmd('doautocmd Syntax') end)
+    for _, buf in ipairs(api.nvim_list_bufs()) do
+        if M.is_drex_buffer(buf) then
+            api.nvim_buf_call(buf, function()
+                vim.cmd('doautocmd Syntax')
+            end)
         end
     end
 end
