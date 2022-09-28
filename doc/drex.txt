@@ -505,6 +505,8 @@ following return types to influence the search behavior:
 
 - Return a string to replace the current search input
 - Return `true` to end the search after your action
+- Return a lua function to end the search after your action (like `true` does)
+  and also call that function afterwards
 
 EXAMPLES~
 

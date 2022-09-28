@@ -156,6 +156,7 @@ function M.search(config)
     vim.opt_local.concealcursor = 'nvc'
     vim.opt_local.spell = false
 
+    local post_fn
     local input = ''
     vim.cmd('redraw')
     utils.echo('Filter for > ' .. input, false)
@@ -179,6 +180,11 @@ function M.search(config)
             if result then
                 if type(result) == 'string' then
                     input = result
+                end
+
+                if type(result) == 'function' then
+                    post_fn = result
+                    break
                 end
 
                 if type(result) == 'boolean' then
@@ -241,6 +247,10 @@ function M.search(config)
     end
     utils.echo(' ', false)
     vim.cmd('redraw')
+
+    if post_fn then
+        post_fn()
+    end
 end
 
 return M
