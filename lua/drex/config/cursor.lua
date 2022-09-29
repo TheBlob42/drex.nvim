@@ -3,6 +3,8 @@ local utils = require('drex.utils')
 local saved_guicursor = vim.opt.guicursor:get()
 local saved_cursorlineopt = vim.opt.cursorlineopt:get()
 
+local hide_cursor_group = vim.api.nvim_create_augroup('DrexHideCursor', {})
+
 ---Create the "transparent" cursor highlight
 local function set_cursor_hl()
     vim.api.nvim_set_hl(0, 'DrexTransparentCursor', {
@@ -49,8 +51,6 @@ end
 
 ---Setup the autocommands for hiding the cursor within the current buffer and trigger them once
 local function init()
-    local hide_cursor_group = vim.api.nvim_create_augroup('DrexHideCursor', {})
-
     vim.api.nvim_create_autocmd({ 'BufEnter', 'CmdlineLeave', 'CmdwinLeave' }, {
         group = hide_cursor_group,
         buffer = 0,
