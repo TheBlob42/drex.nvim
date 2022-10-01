@@ -4,7 +4,10 @@ local api = vim.api
 local utils = require('drex.utils')
 local clipboard = require('drex.clipboard')
 
-local t = function(s)
+---Simple wrapper around `vim.api.nvim_replace_termcodes` for easier usage
+---@param s string
+---@return string
+local function t(s)
     return api.nvim_replace_termcodes(s, true, true, true)
 end
 
