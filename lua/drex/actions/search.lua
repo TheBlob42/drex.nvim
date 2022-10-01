@@ -86,7 +86,9 @@ end
 ---@return boolean
 function M.actions.mark_all()
     for _, line in ipairs(api.nvim_buf_get_lines(0, 0, -1, false)) do
-        clipboard.add_to_clipboard(utils.get_element(line))
+        if line ~= '' then
+            clipboard.add_to_clipboard(utils.get_element(line))
+        end
     end
 
     utils.reload_drex_syntax()
