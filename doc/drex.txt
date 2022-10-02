@@ -453,6 +453,10 @@ following defaults are used:
 - `case_sensitive` - (de)activate case sensitive matching (for normal letters)
 - `keybindings` - keybindings to execute other search related actions
 
+NOTE: If fuzzy matching is active special VIM regular expression characters
+are being escaped and matched literally. Without fuzzy matching you can use
+wildcards `.*`, branches `\(a\|b\)` etc.
+
 ------------------------------------------------------------------------------
 SEARCH KEYBINDINGS                                   *drex-search-keybindings*
 

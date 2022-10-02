@@ -4,6 +4,8 @@ local api = vim.api
 local utils = require('drex.utils')
 local clipboard = require('drex.clipboard')
 
+local ns_id = api.nvim_create_namespace('drex-search')
+
 ---Simple wrapper around `vim.api.nvim_replace_termcodes` for easier usage
 ---@param s string
 ---@return string
@@ -205,10 +207,11 @@ function M.search(config)
         for _, match in ipairs(matches) do
             pcall(vim.fn.matchdelete, match)
         end
+        matches = {}
+        api.nvim_buf_clear_namespace(buf, ns_id, 0, -1)
 
         local new_content
         local case_rgx_postfix = config.case_sensitive and [[\C]] or [[\c]]
-        local filter_input = config.case_sensitive and input or input:lower()
 
         if config.fuzzy then
             local prev_chars_rgx = ''
@@ -218,25 +221,34 @@ function M.search(config)
                 prev_chars_rgx = prev_chars_rgx .. c .. [[.\{-}]]
             end
 
-            new_content = vim.tbl_filter(function(line)
-                local element = utils.get_name(line)
-                if not config.case_sensitive then
-                    element = element:lower()
-                end
-                return element:find('.*'..table.concat(vim.tbl_map(function(c)
-                    return vim.pesc(c)
-                end, vim.split(filter_input, '')), '.*')..'.*')
-            end, content)
-        else
-            table.insert(matches, vim.fn.matchadd('Search', [[/.\{-}\zs]]..input..[[\(.*\/\)\@!]]..case_rgx_postfix))
+            local rgx = vim.regex(prev_chars_rgx .. case_rgx_postfix)
 
             new_content = vim.tbl_filter(function(line)
                 local element = utils.get_name(line)
-                if not config.case_sensitive then
-                    element = element:lower()
-                end
-                return element:find('.*'..filter_input..'.*')
+                return rgx:match_str(element)
             end, content)
+        else
+            local match_ok, match = pcall(vim.fn.matchadd, 'Search', [[/.\{-}\zs]]..input..[[\(.*\/\)\@!]]..case_rgx_postfix)
+            if match_ok then
+                table.insert(matches, match)
+            end
+
+            local rgx_ok, rgx = pcall(vim.regex, input .. case_rgx_postfix)
+            if rgx_ok then
+                new_content = vim.tbl_filter(function(line)
+                    local element = utils.get_name(line)
+                    return rgx:match_str(element)
+                end, content)
+            else
+                new_content = {}
+                local error = rgx:match('.+:.+: (.*)')
+                api.nvim_buf_set_extmark(buf, ns_id, 0, 0, {
+                    virt_text = {{ 'REGEX ERROR: ' .. error, 'ErrorMsg' }},
+                    line_hl_group = 'Normal', -- hide CursorLine highlighting
+                    number_hl_group = 'ErrorMsg',
+                    sign_hl_group = 'ErrorMsg',
+                })
+            end
         end
 
         api.nvim_buf_set_lines(buf, 0, -1, false, new_content)
