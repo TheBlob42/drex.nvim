@@ -5,6 +5,7 @@ local utils = require('drex.utils')
 local clipboard = require('drex.clipboard')
 
 local ns_id = api.nvim_create_namespace('drex-search')
+local search_error_id = 1
 
 ---Simple wrapper around `vim.api.nvim_replace_termcodes` for easier usage
 ---@param s string
@@ -243,12 +244,23 @@ function M.search(config)
                 new_content = {}
                 local error = rgx:match('.+:.+: (.*)')
                 api.nvim_buf_set_extmark(buf, ns_id, 0, 0, {
+                    id = search_error_id,
                     virt_text = {{ 'REGEX ERROR: ' .. error, 'ErrorMsg' }},
                     line_hl_group = 'Normal', -- hide CursorLine highlighting
                     number_hl_group = 'ErrorMsg',
                     sign_hl_group = 'ErrorMsg',
                 })
             end
+        end
+
+        if vim.tbl_isempty(new_content) and vim.tbl_isempty(api.nvim_buf_get_extmark_by_id(buf, ns_id, search_error_id, {})) then
+            api.nvim_buf_set_extmark(buf, ns_id, 0, 0, {
+                id = search_error_id,
+                virt_text = {{ 'No matches found!', 'WarningMsg' }},
+                line_hl_group = 'Normal', -- hide CursorLine highlighting
+                number_hl_group = 'WarningMsg',
+                sign_hl_group = 'WarningMsg',
+            })
         end
 
         api.nvim_buf_set_lines(buf, 0, -1, false, new_content)
