@@ -19,6 +19,12 @@ end, {
     complete = 'dir',
 })
 
+vim.api.nvim_create_user_command('DrexFindFile', function()
+    require('drex').find_element('%')
+end, {
+    desc = 'Jump to the current file in the DREX buffer and focus it'
+})
+
 vim.api.nvim_create_user_command('DrexDrawerOpen', function()
     require('drex.drawer').open()
 end, {
