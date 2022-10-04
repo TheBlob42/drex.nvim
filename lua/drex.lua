@@ -253,7 +253,9 @@ function M.find_element(path)
 
     M.open_directory_buffer('.')
 
-    require('drex.elements').focus_element(api.nvim_get_current_win(), path)
+    if not utils.is_directory(path) then
+        require('drex.elements').focus_element(api.nvim_get_current_win(), path)
+    end
 end
 
 return M
