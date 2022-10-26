@@ -14,6 +14,15 @@ FEATURES                                                       *drex-features*
 - powered by `libuv` (see |vim.loop|)
 
 ==============================================================================
+WIKI                                                               *drex-wiki*
+
+This help file should cover all the basics about the usage and configuration
+of DREX. If you want to have a look at more configuration examples, custom
+functions etc. beyond this document check out the wiki hosted on Github:
+
+https://github.com/TheBlob42/drex.nvim/wiki
+
+==============================================================================
 INSTALLATION                                               *drex-installation*
 
 The plugin requires Neovim version >= 0.7
