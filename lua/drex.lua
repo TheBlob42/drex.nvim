@@ -1,6 +1,7 @@
 local M = {}
 
 local api = vim.api
+local buf_local_group = vim.api.nvim_create_augroup('DrexBufLocal', {})
 
 local fs = require('drex.fs')
 local utils = require('drex.utils')
@@ -93,14 +94,17 @@ function M.open_directory_buffer(path)
     load_buffer_content(buffer)
 
     -- set "sane defaults" autocmds
-    local local_group = vim.api.nvim_create_augroup('DrexBufLocal', {})
+    api.nvim_clear_autocmds {
+        group = buf_local_group,
+        buffer = buffer,
+    }
     vim.api.nvim_create_autocmd('BufEnter', {
-        group = local_group,
+        group = buf_local_group,
         buffer = buffer,
         callback = on_enter,
     })
     vim.api.nvim_create_autocmd('BufLeave', {
-        group = local_group,
+        group = buf_local_group,
         buffer = buffer,
         callback = on_leave,
     })
