@@ -560,6 +560,22 @@ Replace the search input with the content of a register:
 	}
 <
 ==============================================================================
+SESSIONS                                                       *drex-sessions*
+
+DREX buffers are restored automatically when loading a session, but there are
+some caveats you'll have to live with:
+
+- Some information is not restored by a saved session:
+  - The DREX clipboard content
+  - Expanded sub directories
+  - The drawer window¹ (so |DrexDrawerOpen| would open a new one)
+- Having a DREX buffer open in multiple windows causes problems
+
+¹To properly save the drawer windows in a session you have to add "globals" to
+the |sessionoptions| before create a session. Then they can be restored
+properly by this plugin: `set ssop+=globals`
+
+==============================================================================
 HIGHLIGHT                                                     *drex-highlight*
 
 DREX uses the following highlight groups that you can configure to your
@@ -594,8 +610,8 @@ CUSTOMIZATION                                             *drex-customization*
 
 If you miss a certain functionality or have a very specific use case, you can
 implement a custom action very easily. Every line within a DREX buffer is just
-an absolute file path (plus some indentation and an icon) hidden via
-|conceal| (use `set conceallevel=0` to see).
+an absolute file path (plus some indentation and an icon) hidden via |conceal|
+(use `set conceallevel=0` to see).
 
 You can easily access the different parts of an element with the helper
 functions found `lua/drex/utils.lua`:

@@ -83,6 +83,17 @@ vim.api.nvim_create_autocmd('SessionLoadPost', {
     end,
 })
 
+vim.api.nvim_create_autocmd('SessionLoadPost', {
+    desc = 'Restore DREX drawer configuration',
+    pattern = '*',
+    once = true,
+    callback = function()
+        if vim.g.DrexDrawers then
+            require('drex.drawer') -- session handling is part of drawer.lua
+        end
+    end,
+})
+
 if require('drex.config').options.hijack_netrw then
     require('drex.config.netrw').init()
 end
