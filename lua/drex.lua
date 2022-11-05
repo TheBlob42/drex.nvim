@@ -87,8 +87,8 @@ function M.open_directory_buffer(path)
     api.nvim_buf_set_option(buffer, 'shiftwidth', 2)
 
     -- set the buffer to the current window in order to properly load it
-    api.nvim_set_current_buf(buffer)
     api.nvim_buf_set_option(buffer, 'filetype', 'drex')
+    api.nvim_set_current_buf(buffer)
 
     -- set buffer content for new and "damaged" DREX buffers
     load_buffer_content(buffer)
