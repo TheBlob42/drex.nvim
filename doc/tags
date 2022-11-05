@@ -32,6 +32,7 @@ drex-lualine-extension	drex.txt	/*drex-lualine-extension*
 drex-search	drex.txt	/*drex-search*
 drex-search-configuration	drex.txt	/*drex-search-configuration*
 drex-search-keybindings	drex.txt	/*drex-search-keybindings*
+drex-sessions	drex.txt	/*drex-sessions*
 drex-usage	drex.txt	/*drex-usage*
 drex-wiki	drex.txt	/*drex-wiki*
 drex-window-picker	drex.txt	/*drex-window-picker*

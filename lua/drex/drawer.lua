@@ -8,8 +8,45 @@ local config = require('drex.config')
 local drawer_widths = {}  -- save win width per tabpage
 local drawer_windows = {} -- save win id per tabpage
 
+-- during session load check for saved drawer configurations and restore them
+if vim.g.SessionLoad == 1 and vim.g.DrexDrawers then
+    local saved = vim.tbl_map(tonumber, vim.split(vim.g.DrexDrawers, ':', {}))
+    for i=1,vim.tbl_count(saved),3 do
+        local tab   = saved[i] -- works because tabnr == tabid on session reload
+        local winnr = saved[i+1]
+        local width = saved[i+2]
+
+        for _, win in ipairs(api.nvim_tabpage_list_wins(tab)) do
+            if winnr == api.nvim_win_get_number(win) then
+                drawer_windows[tab] = win
+                drawer_widths[tab]  = width
+                api.nvim_win_set_width(win, width)
+                api.nvim_win_set_option(win, 'winfixwidth', true)
+                break
+            end
+        end
+    end
+end
+
+---Save the current drawer windows and widths into the global 'DrexDrawers' variable
+---This variable will be used to restore the drawer configuration when loading a session
+---NOTE: For this to work out you have to add "globals" to the 'sessionoptions' option, see `:h drex-sessions`
+local function save()
+    local x = {}
+    for tab, win in pairs(drawer_windows) do
+        if api.nvim_tabpage_is_valid(tab) and api.nvim_win_is_valid(win) then
+            -- tab- and winids might be different after restoring a session
+            -- to mitigate this we instead save tabnr and winnr as a "unique id"
+            table.insert(x, api.nvim_tabpage_get_number(tab))
+            table.insert(x, api.nvim_win_get_number(win))
+            table.insert(x, api.nvim_win_get_width(win))
+        end
+    end
+    vim.g.DrexDrawers = table.concat(x, ':')
+end
+
 ---Return the drawer window for the current tabpage (if currently visible)
----@return number
+---@return number?
 function M.get_drawer_window()
     local win = drawer_windows[api.nvim_get_current_tabpage()]
     if win and api.nvim_win_is_valid(win) then
@@ -52,6 +89,8 @@ function M.close()
         local tab = api.nvim_get_current_tabpage()
         api.nvim_win_close(drawer_windows[tab], false)
         drawer_windows[tab] = nil
+
+        save()
     end
 end
 
@@ -79,6 +118,8 @@ function M.set_width(width, delta, resize)
     if resize and M.get_drawer_window() then
         api.nvim_win_set_width(M.get_drawer_window(), drawer_widths[tab])
     end
+
+    save()
 end
 
 ---Find the given `path` in the drawer window and set the cursor to the corresponding line
