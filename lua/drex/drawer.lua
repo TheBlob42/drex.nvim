@@ -131,6 +131,11 @@ end
 function M.find_element(path, focus_drawer_window, resize_drawer_window)
     path = utils.expand_path(path)
 
+    if not vim.loop.fs_lstat(path) then
+        vim.notify('The buffer path "'..path..'" does not point to an existing file!', vim.log.levels.ERROR, {})
+        return
+    end
+
     local old_win = api.nvim_get_current_win()
     local drawer_window = M.get_drawer_window()
     if not drawer_window then
