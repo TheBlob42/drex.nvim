@@ -135,6 +135,7 @@ local default_config = {
 function M.search(config)
     config = vim.tbl_deep_extend('force', default_config, config or {})
     local src_buf = api.nvim_get_current_buf()
+    local view = vim.fn.winsaveview()
     local content = api.nvim_buf_get_lines(src_buf, 0, -1, false)
 
     local buf = vim.api.nvim_create_buf(false, true)
@@ -146,6 +147,7 @@ function M.search(config)
     api.nvim_buf_set_option(buf, 'buftype', 'nofile')
     api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
     api.nvim_set_current_buf(buf)
+    vim.fn.winrestview(view)
 
     -- check keybindings and convert keys into terminal codes
     local keybindings = {}
