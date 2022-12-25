@@ -4,8 +4,6 @@ local api = vim.api
 local luv = vim.loop
 local utils = require('drex.utils')
 
-local clipboard_group = api.nvim_create_augroup('DrexClipboardBuffer', {})
-
 M.clipboard = {}
 
 ---Clear the clipboard
@@ -101,44 +99,7 @@ function M.open_clipboard_window()
     api.nvim_buf_set_name(buffer, 'DREX Clipboard')
     utils.buf_clear_undo_history(buffer)
 
-    local vim_width = vim.opt.columns:get()
-    local vim_height = vim.opt.lines:get()
-
-    -- calculate floating window dimensions
-    -- - height: 80% of the Neovim window
-    -- - width:
-    --   - 60% of Neovim window (default)
-    --   - or at least 80 columns
-    --   - or as long as the longest element (if enough space)
-    local win_height = math.floor(vim_height * 0.8)
-    local win_width = math.floor(vim_width * 0.6)
-
-    win_width = win_width < 80 and 80 or win_width
-    local max_element_width = vim.fn.max(vim.tbl_map(function(element) return #element end, elements))
-    if max_element_width > win_width then
-        if max_element_width > vim_width - 10 then
-            win_width = vim_width - 10
-        else
-            win_width = max_element_width
-        end
-    end
-
-    local x = math.floor((vim_width - win_width) / 2)
-    local y = math.floor((vim_height - win_height) / 2)
-
-    local clipboard_win = api.nvim_open_win(buffer, true, {
-        relative = 'editor',
-        width = win_width,
-        height = win_height,
-        col = x,
-        row = y,
-        style = 'minimal',
-        border = 'rounded',
-        noautocmd = false,
-    })
-    api.nvim_win_set_option(clipboard_win, 'wrap', false)
-
-    local on_close = function()
+    local on_leave = function(clipboard_win)
         local buf_elements = {}
 
         for _, element in ipairs(api.nvim_buf_get_lines(buffer, 0, -1, false)) do
@@ -178,23 +139,7 @@ function M.open_clipboard_window()
         end)
     end
 
-    api.nvim_clear_autocmds {
-        group = clipboard_group,
-        buffer = buffer,
-    }
-    api.nvim_create_autocmd('WinLeave', {
-        group = clipboard_group,
-        buffer = buffer,
-        nested = true, -- trigger nested "BufUnload" event
-        callback = function()
-            api.nvim_win_close(clipboard_win, true)
-        end,
-    })
-    api.nvim_create_autocmd('BufUnload', {
-        group = clipboard_group,
-        buffer = buffer,
-        callback = on_close,
-    })
+    utils.floating_win(buffer, on_leave)
 end
 
 ---Mark the elements from `startRow` to `endRow` and add them to the DREX clipboard
