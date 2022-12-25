@@ -200,6 +200,77 @@ function M.reload_drex_syntax()
 end
 
 -- ###############################################
+-- ### window utility
+-- ###############################################
+
+---Simple utility to create a basic floating window with some "sane" default settings
+---The window is automatically closed if the `buffer` is changed or when leaving the window
+---When that happens the optionally provided `on_leave` function is called with the floating window handle as an argument. This will happen during an autocommand so some functions might not be applicable
+---@param buffer number Buffer handle to be shown in the floating window
+---@param on_leave function? Function to call when leaving buffer or window. The window handle is passed as an argument to this function
+---@return number floating_win The window handle of the created window
+function M.floating_win(buffer, on_leave)
+    local lines = api.nvim_buf_get_lines(buffer, 0, -1, false)
+
+    local vim_width = vim.opt.columns:get()
+    local vim_height = vim.opt.lines:get()
+
+    -- calculate floating window dimensions
+    -- - height: 80% of the Neovim window
+    -- - width:
+    --   - 60% of Neovim window (default)
+    --   - or at least 80 columns
+    --   - or as long as the longest element (if enough space)
+    local win_height = math.floor(vim_height * 0.8)
+    local win_width = math.floor(vim_width * 0.6)
+
+    win_width = win_width < 80 and 80 or win_width
+    local max_element_width = vim.fn.max(vim.tbl_map(function(line) return #line end, lines))
+    if max_element_width > win_width then
+        if max_element_width > vim_width - 10 then
+            win_width = vim_width - 10
+        else
+            win_width = max_element_width
+        end
+    end
+
+    local x = math.floor((vim_width - win_width) / 2)
+    local y = math.floor((vim_height - win_height) / 2)
+
+    local win = api.nvim_open_win(buffer, true, {
+        relative = 'editor',
+        width = win_width,
+        height = win_height,
+        col = x,
+        row = y,
+        style = 'minimal',
+        border = 'rounded',
+        noautocmd = false,
+    })
+    api.nvim_win_set_option(win, 'wrap', false)
+
+    api.nvim_create_autocmd('WinLeave', {
+        buffer = buffer,
+        nested = true, -- trigger nested "BufUnload" event
+        callback = function()
+            api.nvim_win_close(win, true)
+        end,
+    })
+
+    -- register optional `on_leave` function
+    if on_leave then
+        api.nvim_create_autocmd('BufUnload', {
+            buffer = buffer,
+            callback = function()
+                on_leave(win)
+            end,
+        })
+    end
+
+    return win
+end
+
+-- ###############################################
 -- ### miscellaneous utility
 -- ###############################################
 

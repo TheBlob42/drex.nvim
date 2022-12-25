@@ -489,7 +489,23 @@ function M.cut_and_move()
     paste(true)
 end
 
-function M.multi_rename(mode)
+---Rename multiple elements at once (e.g. by using macros or `:s`)
+---Depending on the `mode` open the chosen elements in a new buffer & window and edit them in there
+---
+---- `"clipboard"` all elements from the DREX clipboard
+---- `"visual"` all elements currently visually selected
+---- for anything else use the element of the current line
+---
+---You can pass an optional `opts` table for additional configuration
+---
+---- window   Where to open the rename window
+---           Either "split" (default), "vsplit" or "floating"
+---
+---Once the buffer is closed you can confirm your changes to actually trigger the renaming process
+---@param mode string Either "visual" or "clipboard"
+---@param opts table? Additional options
+function M.multi_rename(mode, opts)
+    opts = opts or { window = 'floating' }
     local elements
 
     if mode == 'clipboard' then
@@ -523,9 +539,6 @@ function M.multi_rename(mode)
     api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit') -- to shade comment lines
     api.nvim_buf_set_name(buffer, 'DREX Rename')
     utils.buf_clear_undo_history(buffer)
-
-    vim.cmd('below split')
-    api.nvim_set_current_buf(buffer)
 
     local on_close = function()
         local buf_elements = vim.tbl_filter(
@@ -592,15 +605,27 @@ function M.multi_rename(mode)
         end
     end
 
-    api.nvim_clear_autocmds {
-        group = rename_group,
-        buffer = buffer,
-    }
-    api.nvim_create_autocmd('BufUnload', {
-        group = rename_group,
-        buffer = buffer,
-        callback = on_close,
-    })
+    if opts.window == 'floating' then
+        utils.floating_win(buffer, on_close)
+    else
+        if opts.window == 'vsplit' then
+            vim.cmd.vsplit()
+        else
+            vim.cmd.split()
+        end
+
+        api.nvim_set_current_buf(buffer)
+
+        api.nvim_clear_autocmds {
+            group = rename_group,
+            buffer = buffer,
+        }
+        api.nvim_create_autocmd('BufUnload', {
+            group = rename_group,
+            buffer = buffer,
+            callback = on_close,
+        })
+    end
 end
 
 ---Rename the element under the cursor
