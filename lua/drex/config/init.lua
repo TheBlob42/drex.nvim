@@ -114,7 +114,7 @@ local function validate_icon(name, value)
 end
 
 ---Helper function to check for supported `window_picker` labels
----@param labels table List of labels to validate
+---@param labels string List of labels to validate
 ---@return boolean
 local function validate_window_picker_labels(labels)
     local errors = {}
@@ -243,6 +243,10 @@ function M.configure(user_config)
     -- check for a valid sort function
     if not validate_sorting(M.options.sorting) then
         M.options.sorting = defaults.sorting
+    end
+
+    if M.options.hijack_netrw then
+        require('drex.config.netrw').init()
     end
 end
 

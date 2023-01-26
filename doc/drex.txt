@@ -287,8 +287,10 @@ Set this option to `true` to activate it.
 
 Note: This will not affect the |netrw-explore| commands
 
-Note: This options needs to be set before the plugin is loaded and can not be
-changed or toggled afterwards (especially in comparison to the other options)
+Note: This option can only be activated once either on the plugin startup or
+when calling `require('drex.config').configure {}` . Once it has been set it
+can not be deactivated again (in comparison to other options) because this
+deletes the |FileExplorer| group which can not be restored.
 
 ------------------------------------------------------------------------------
 SORTING                                           *drex-configuration-sorting*
