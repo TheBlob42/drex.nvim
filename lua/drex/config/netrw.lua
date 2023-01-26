@@ -1,4 +1,5 @@
 local utils = require('drex.utils')
+local initialized = false
 
 ---Check if the current buffer points to an existing directory
 ---If so replace it with a corresponding DREX buffer instead
@@ -23,20 +24,24 @@ local function hijack()
 end
 
 local function init()
-    vim.api.nvim_create_autocmd('VimEnter', {
-        pattern = '*',
-        callback = function()
-            if vim.fn.exists('#FileExplorer') ~= 0 then
-                vim.api.nvim_del_augroup_by_name('FileExplorer')
-            end
-        end,
-    })
+    if not initialized then
+        initialized = true
 
-    vim.api.nvim_create_autocmd('BufEnter', {
-        pattern = '*',
-        nested = true,
-        callback = hijack,
-    })
+        vim.api.nvim_create_autocmd('VimEnter', {
+            pattern = '*',
+            callback = function()
+                if vim.fn.exists('#FileExplorer') ~= 0 then
+                    vim.api.nvim_del_augroup_by_name('FileExplorer')
+                end
+            end,
+        })
+
+        vim.api.nvim_create_autocmd('BufEnter', {
+            pattern = '*',
+            nested = true,
+            callback = hijack,
+        })
+    end
 end
 
 return { init = init }
