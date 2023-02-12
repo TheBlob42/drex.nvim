@@ -744,7 +744,7 @@ end
 ---- 'visual': delete all elements in the current visual selection
 ---- 'line': (default) delete the element in the current line
 ---
----Returns `true` if all elements were successfully deleted
+---Returns `true` if ALL elements were successfully deleted
 ---@param mode string The delete mode to use
 ---@return boolean
 function M.delete(mode)
@@ -802,38 +802,37 @@ function M.delete(mode)
     for index, element in ipairs(elements) do
         local success, error = delete_element(element)
 
-        if not success then
+        if success then
+            delete_counter = delete_counter + 1
+            clipboard.delete_from_clipboard(element)
+
+            -- delete corresponding (and loaded) buffer
+            for _, buf in ipairs(api.nvim_list_bufs()) do
+                if api.nvim_buf_is_loaded(buf) then
+                    if vim.startswith(api.nvim_buf_get_name(buf), element) then
+                        api.nvim_buf_delete(buf, { force = true })
+                    end
+                end
+            end
+        else
             utils.echo("Could not delete '" .. element .. "':\n" .. error, false, 'ErrorMsg')
             if index < #elements then
-                if vim.fn.confirm('Continue?', '&Yes\n&No', 1) == 1 then
-                    goto continue
-                else
+                if vim.fn.confirm('Continue?', '&Yes\n&No', 1) ~= 1 then
                     clear_matches()
                     utils.reload_drex_syntax()
                     return false
                 end
             end
         end
-
-        delete_counter = delete_counter + 1
-        clipboard.delete_from_clipboard(element)
-
-        -- delete corresponding (and loaded) buffer
-        for _, buf in ipairs(api.nvim_list_bufs()) do
-            if api.nvim_buf_is_loaded(buf) then
-                if vim.startswith(api.nvim_buf_get_name(buf), element) then
-                    api.nvim_buf_delete(buf, { force = true })
-                end
-            end
-        end
-
-        ::continue::
     end
 
-    vim.notify('Deleted ' .. delete_counter .. ' element' .. (delete_counter > 1 and 's' or ''), vim.log.levels.INFO, { title = 'DREX' })
+    if delete_counter > 0 then
+        vim.notify('Deleted ' .. delete_counter .. ' element' .. (delete_counter > 1 and 's' or ''), vim.log.levels.INFO, { title = 'DREX' })
+    end
+
     clear_matches()
     utils.reload_drex_syntax()
-    return true
+    return delete_counter == #elements
 end
 
 return M
