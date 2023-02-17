@@ -797,6 +797,7 @@ function M.delete(mode)
         table.sort(elements, function(a, b) return a > b end)
     end
 
+    local error_msg
     local delete_counter = 0
 
     for index, element in ipairs(elements) do
@@ -815,8 +816,11 @@ function M.delete(mode)
                 end
             end
         else
-            utils.echo("Could not delete '" .. element .. "':\n" .. error, false, 'ErrorMsg')
+            error_msg = "Could not delete '" .. element .. "':\n" .. error
             if index < #elements then
+                utils.echo(error_msg, false, 'ErrorMsg')
+                error_msg = nil
+
                 if vim.fn.confirm('Continue?', '&Yes\n&No', 1) ~= 1 then
                     clear_matches()
                     utils.reload_drex_syntax()
@@ -828,6 +832,10 @@ function M.delete(mode)
 
     if delete_counter > 0 then
         vim.notify('Deleted ' .. delete_counter .. ' element' .. (delete_counter > 1 and 's' or ''), vim.log.levels.INFO, { title = 'DREX' })
+    end
+
+    if error_msg then
+        vim.notify(error_msg, vim.log.levels.ERROR, { title = 'DREX' })
     end
 
     clear_matches()
