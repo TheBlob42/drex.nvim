@@ -296,7 +296,7 @@ function M.focus_element(win, path)
         api.nvim_win_set_cursor(win, { row, 0 })
         if not visible then
             vim.schedule(function()
-                vim.fn.win_execute(win, 'normal zz')
+                vim.fn.win_execute(win, 'normal! zz')
             end)
         end
     end
