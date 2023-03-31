@@ -138,12 +138,17 @@ function M.find_element(path, focus_drawer_window, resize_drawer_window)
 
     local old_win = api.nvim_get_current_win()
     local drawer_window = M.get_drawer_window()
+    local drawer_was_closed = not drawer_window
     if not drawer_window then
         M.open()
         drawer_window = M.get_drawer_window()
     end
 
     require('drex.elements').focus_element(drawer_window, path)
+
+    if drawer_was_closed then
+        vim.fn.win_execute(drawer_window, 'normal! zz')
+    end
 
     if resize_drawer_window then
         api.nvim_win_call(drawer_window, function()
