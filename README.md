@@ -78,11 +78,11 @@ DREX also comes with a simple project drawer functionality
 - `l` expands the current element
   - If it is a directory open its content in a subtree
   - If it is a file open the file in the current window
-  > `<Right>` and `<2-LeftMouse>` are alternative keybindings
+    > `<Right>` and `<2-LeftMouse>` are alternative keybindings
 - `h` collapses the current directories subtree
   - If the element under the cursor is an open directory collapse it
   - Otherwise collapse the parent directory of the element
-  > `<Left>` and `<RightMouse>` are alternative keybindings
+    > `<Left>` and `<RightMouse>` are alternative keybindings
 - `<C-v>` opens a file in a vertical split
 - `<C-x>` opens a file in a horizontal split
 - `<C-t>` opens a file in a new tab
@@ -136,10 +136,10 @@ DREX also comes with a simple project drawer functionality
 
 ## Configuration
 
-There is no initial setup needed to use DREX  
+There is no initial setup needed to use DREX
 However you may configure certain settings to your liking
 
-Check out `:help drex-configuration` for more details about the individual options  
+Check out `:help drex-configuration` for more details about the individual options
 See also the wiki pages about [configuration](https://github.com/TheBlob42/drex.nvim/wiki/Configuration) and [custom actions](https://github.com/TheBlob42/drex.nvim/wiki/Custom-Actions) for more information about further customization
 
 <details>
@@ -171,6 +171,7 @@ require('drex.config').configure {
         return aname < bname
     end,
     drawer = {
+        side = 'left',
         default_width = 30,
         window_picker = {
             enabled = true,
@@ -229,6 +230,7 @@ require('drex.config').configure {
     on_leave = nil,
 }
 ```
+
 </details>
 
 ## Internals
@@ -241,4 +243,4 @@ See also `:help drex-customization` and the [Wiki](https://github.com/TheBlob42/
 
 - [nvim-tree](https://github.com/kyazdani42/nvim-tree.lua)
 - [vim-dirvish](https://github.com/justinmk/vim-dirvish)
-- [fern](https://github.com/lambdalisue/fern.vim) 
+- [fern](https://github.com/lambdalisue/fern.vim)
