@@ -5,21 +5,21 @@ local drex = require('drex')
 local utils = require('drex.utils')
 local config = require('drex.config')
 
-local drawer_widths = {}  -- save win width per tabpage
+local drawer_widths = {} -- save win width per tabpage
 local drawer_windows = {} -- save win id per tabpage
 
 -- during session load check for saved drawer configurations and restore them
 if vim.g.SessionLoad == 1 and vim.g.DrexDrawers then
     local saved = vim.tbl_map(tonumber, vim.split(vim.g.DrexDrawers, ':', {}))
-    for i=1,vim.tbl_count(saved),3 do
-        local tab   = saved[i] -- works because tabnr == tabid on session reload
-        local winnr = saved[i+1]
-        local width = saved[i+2]
+    for i = 1, vim.tbl_count(saved), 3 do
+        local tab = saved[i] -- works because tabnr == tabid on session reload
+        local winnr = saved[i + 1]
+        local width = saved[i + 2]
 
         for _, win in ipairs(api.nvim_tabpage_list_wins(tab)) do
             if winnr == api.nvim_win_get_number(win) then
                 drawer_windows[tab] = win
-                drawer_widths[tab]  = width
+                drawer_widths[tab] = width
                 api.nvim_win_set_width(win, width)
                 api.nvim_win_set_option(win, 'winfixwidth', true)
                 break
@@ -59,8 +59,9 @@ end
 function M.open()
     local win = M.get_drawer_window()
     if not win then
+        local side = (config.options.drawer.side == 'left' and 'H' or 'L')
         vim.cmd('vs')
-        vim.cmd('wincmd H')
+        vim.cmd('wincmd ' .. side)
 
         local tab = api.nvim_get_current_tabpage()
         win = api.nvim_get_current_win()
@@ -82,7 +83,11 @@ end
 function M.close()
     if M.get_drawer_window() then
         if vim.tbl_count(api.nvim_list_wins()) == 1 then
-            utils.echo("You can't close the DREX drawer if it is the last editor window (see ':h E444')", false, 'WarningMsg')
+            utils.echo(
+                "You can't close the DREX drawer if it is the last editor window (see ':h E444')",
+                false,
+                'WarningMsg'
+            )
             return
         end
 
@@ -132,7 +137,7 @@ function M.find_element(path, focus_drawer_window, resize_drawer_window)
     path = utils.expand_path(path)
 
     if not vim.loop.fs_lstat(path) then
-        vim.notify('The buffer path "'..path..'" does not point to an existing file!', vim.log.levels.ERROR, {})
+        vim.notify('The buffer path "' .. path .. '" does not point to an existing file!', vim.log.levels.ERROR, {})
         return
     end
 
