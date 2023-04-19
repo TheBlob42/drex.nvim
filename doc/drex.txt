@@ -165,6 +165,7 @@ However you may configure certain settings to your liking.
 			return aname < bname
 		end,
 		drawer = {
+			side = 'left',
 			default_width = 30,
 			window_picker = {
 				enabled = true,
@@ -324,6 +325,7 @@ DRAWER                                             *drex-configuration-drawer*
 Options specific to the |drex-drawer| functionality:
 >
 	drawer = {
+		side = 'left',
 		default_width = 30,
 		window_picker = {
 			enabled = true,
@@ -331,6 +333,7 @@ Options specific to the |drex-drawer| functionality:
 		},
 	},
 <
+- `side` - the default side the drawer will open ('left' | 'right')
 - `default_width` - the default width of the drawer window (columns)
 
                                                           *drex-window-picker*
