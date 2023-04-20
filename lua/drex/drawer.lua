@@ -59,7 +59,7 @@ end
 function M.open()
     local win = M.get_drawer_window()
     if not win then
-        local side = (config.options.drawer.side == 'left' and 'H' or 'L')
+        local side = (config.options.drawer.side == 'right' and 'L' or 'H')
         vim.cmd('vs')
         vim.cmd('wincmd ' .. side)
 
