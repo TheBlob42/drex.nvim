@@ -136,10 +136,10 @@ DREX also comes with a simple project drawer functionality
 
 ## Configuration
 
-There is no initial setup needed to use DREX
+There is no initial setup needed to use DREX 
 However you may configure certain settings to your liking
 
-Check out `:help drex-configuration` for more details about the individual options
+Check out `:help drex-configuration` for more details about the individual options 
 See also the wiki pages about [configuration](https://github.com/TheBlob42/drex.nvim/wiki/Configuration) and [custom actions](https://github.com/TheBlob42/drex.nvim/wiki/Custom-Actions) for more information about further customization
 
 <details>
