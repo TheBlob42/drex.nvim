@@ -19,7 +19,7 @@ function M.stats()
         return
     end
 
-    local created  = os.date('%c', details.birthtime.sec)
+    local created = os.date('%c', details.birthtime.sec)
     local accessed = os.date('%c', details.atime.sec)
     local modified = os.date('%c', details.mtime.sec)
 
@@ -43,7 +43,7 @@ function M.stats()
     -- format positive byte size with decimal delimiters
     -- e.g. 123456789 --> 123,456,789
     -- source: https://stackoverflow.com/a/11005263
-    local formatted_byte_size = tostring(details.size):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+    local formatted_byte_size = tostring(details.size):reverse():gsub('%d%d%d', '%1,'):reverse():gsub('^,', '')
 
     -- mask off the file type portion of mode (using 07777)
     -- print as octal number to see the real permissions

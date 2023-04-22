@@ -68,7 +68,9 @@ function M.get_clipboard_entries(sort_order)
     if sort_order == 'asc' then
         table.sort(clipboard_entries)
     elseif sort_order == 'desc' then
-        table.sort(clipboard_entries, function(a, b) return a > b end)
+        table.sort(clipboard_entries, function(a, b)
+            return a > b
+        end)
     end
 
     return clipboard_entries
@@ -88,7 +90,7 @@ function M.open_clipboard_window()
         "# confirmation (only if changes exist). Empty lines, comments starting with '#'",
         '# and non-existing elements will be ignored and not added to the clipboard',
         '',
-        unpack(elements)
+        unpack(elements),
     }
 
     local buffer = api.nvim_create_buf(false, true)

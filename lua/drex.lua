@@ -14,7 +14,13 @@ local function load_buffer_content(buffer)
     local buflines = api.nvim_buf_get_lines(buffer, 0, -1, false)
 
     if #buflines == 0 then
-        utils.echo('DREX buffer ' .. buffer .. ' is either unloaded or in a "funky" state. This should not happen, so check if we can reproduce it and file an issue :-)', true, 'WarningMsg')
+        utils.echo(
+            'DREX buffer '
+                .. buffer
+                .. ' is either unloaded or in a "funky" state. This should not happen, so check if we can reproduce it and file an issue :-)',
+            true,
+            'WarningMsg'
+        )
     end
 
     -- check if the buffer has any "content" (any lines with text)
@@ -22,7 +28,7 @@ local function load_buffer_content(buffer)
     -- --> newly created drex buffer
     -- --> empty directory
     -- --> loading error (e.g. call ':e' in a drex buffer)
-    if #buflines == 1 and buflines[1] == "" then
+    if #buflines == 1 and buflines[1] == '' then
         local path = utils.get_root_path(buffer)
         local dir_content = fs.scan_directory(path)
         if dir_content and #dir_content > 0 then
@@ -39,17 +45,17 @@ end
 
 ---Set sane local defaults when entering a DREX buffer
 local function on_enter()
-    vim.opt_local.wrap = false          -- wrap and conceal don't play well together
-    vim.opt_local.cursorline = true     -- make the selected line better visible
-    vim.opt_local.conceallevel = 3      -- hide full path completely
+    vim.opt_local.wrap = false -- wrap and conceal don't play well together
+    vim.opt_local.cursorline = true -- make the selected line better visible
+    vim.opt_local.conceallevel = 3 -- hide full path completely
     vim.opt_local.concealcursor = 'nvc' -- don't reveal full path on cursor
-    vim.opt_local.spell = false         -- spell checking is usually just annoying
+    vim.opt_local.spell = false -- spell checking is usually just annoying
 
     if config.options.on_enter then
         config.options.on_enter()
     end
 
-    vim.cmd("doautocmd Syntax") -- reload syntax
+    vim.cmd('doautocmd Syntax') -- reload syntax
 end
 
 ---Call custom logic when leaving a DREX buffer
@@ -66,7 +72,11 @@ function M.open_directory_buffer(path)
     path = utils.expand_path(path or '.')
 
     if not utils.points_to_existing_directory(path) then
-        vim.notify("The path '" .. path .. "' does not point to an existing directory!", vim.log.levels.ERROR, { title = 'DREX' })
+        vim.notify(
+            "The path '" .. path .. "' does not point to an existing directory!",
+            vim.log.levels.ERROR,
+            { title = 'DREX' }
+        )
         return
     end
 
@@ -94,10 +104,10 @@ function M.open_directory_buffer(path)
     load_buffer_content(buffer)
 
     -- set "sane defaults" autocmds
-    api.nvim_clear_autocmds {
+    api.nvim_clear_autocmds({
         group = buf_local_group,
         buffer = buffer,
-    }
+    })
     vim.api.nvim_create_autocmd('BufEnter', {
         group = buf_local_group,
         buffer = buffer,
@@ -150,8 +160,8 @@ function M.reload_directory(buffer, path)
     end
 
     local buffer_lines = api.nvim_buf_get_lines(buffer, 0, -1, false)
-    local start_row      -- the first row which belongs to the given path
-    local end_row        -- the last row which belongs to the given path
+    local start_row -- the first row which belongs to the given path
+    local end_row -- the last row which belongs to the given path
     local open_dirs = {} -- remember open directories (to afterwards re-open them again)
 
     if path == root_path then
@@ -247,7 +257,9 @@ function M.reload_directory(buffer, path)
         -- use `pcall` as the cursor position might be invalid (outside of the displayed buffer)
         local success = pcall(api.nvim_win_set_cursor, win, pos)
         if not success then
-            api.nvim_win_call(win, function() vim.cmd("normal G") end)
+            api.nvim_win_call(win, function()
+                vim.cmd('normal G')
+            end)
         end
     end
 end

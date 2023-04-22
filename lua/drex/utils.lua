@@ -185,7 +185,7 @@ end
 function M.get_root_path(buffer)
     buffer = buffer or api.nvim_get_current_buf()
     local buf_name = api.nvim_buf_get_name(buffer)
-    return buf_name:match("^drex://(.*)$")
+    return buf_name:match('^drex://(.*)$')
 end
 
 ---Reload the syntax option in all DREX buffers
@@ -225,7 +225,9 @@ function M.floating_win(buffer, on_leave)
     local win_width = math.floor(vim_width * 0.6)
 
     win_width = win_width < 80 and 80 or win_width
-    local max_element_width = vim.fn.max(vim.tbl_map(function(line) return #line end, lines))
+    local max_element_width = vim.fn.max(vim.tbl_map(function(line)
+        return #line
+    end, lines))
     if max_element_width > win_width then
         if max_element_width > vim_width - 10 then
             win_width = vim_width - 10
@@ -280,7 +282,7 @@ end
 ---@param highlight string? (Optional) Highlight group to use (defaults to 'None')
 function M.echo(msg, history, highlight)
     highlight = highlight or 'None'
-    api.nvim_echo({{ msg, highlight }}, history, {})
+    api.nvim_echo({ { msg, highlight } }, history, {})
 end
 
 ---Expand the given path properly so it can be used within DREX
@@ -317,7 +319,7 @@ end
 ---@return number end_row
 function M.get_visual_selection()
     local startRow = vim.fn.getpos("'<")[2]
-    local endRow   = vim.fn.getpos("'>")[2]
+    local endRow = vim.fn.getpos("'>")[2]
     if startRow < endRow then
         return startRow, endRow
     else
@@ -357,16 +359,16 @@ function M.shorten_path(path, max_width)
         local segments = vim.split(path, sep)
         local root = segments[1] -- never shorten the root drive (e.g. 'C:')
         local target = segments[#segments]
-        local directories = table.concat(segments, sep, 2, #segments-1) .. sep
+        local directories = table.concat(segments, sep, 2, #segments - 1) .. sep
 
         local short
         -- save shortened strings so we don't have to recalculate them
         local cache = {}
 
         -- only shorten the directories of the path and see if that is enough to match max_width
-        for i=3,1,-1 do
+        for i = 3, 1, -1 do
             cache[i] = vim.fn.pathshorten(directories, i)
-            short = string.format('%s'..sep..'%s%s', root, cache[i], target)
+            short = string.format('%s' .. sep .. '%s%s', root, cache[i], target)
 
             if #short <= max_width then
                 return short
@@ -374,8 +376,8 @@ function M.shorten_path(path, max_width)
         end
 
         -- try and shorten the target element as well to match max_width
-        for i=3,1,-1 do
-            short = string.format('%s'..sep..'%s%s', root, cache[i], target:sub(1,i))
+        for i = 3, 1, -1 do
+            short = string.format('%s' .. sep .. '%s%s', root, cache[i], target:sub(1, i))
 
             if #short <= max_width then
                 return short

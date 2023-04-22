@@ -1,5 +1,9 @@
 if vim.fn.has('nvim-0.7') ~= 1 then
-    vim.notify('Your version of drex.nvim does not support Neovim version < 0.7\nPlease see `:h drex-announcement` for more information', vim.log.levels.ERROR, {})
+    vim.notify(
+        'Your version of drex.nvim does not support Neovim version < 0.7\nPlease see `:h drex-announcement` for more information',
+        vim.log.levels.ERROR,
+        {}
+    )
     return
 end
 
@@ -22,31 +26,31 @@ end, {
 vim.api.nvim_create_user_command('DrexDrawerOpen', function()
     require('drex.drawer').open()
 end, {
-    desc = 'Open and focus the DREX drawer window'
+    desc = 'Open and focus the DREX drawer window',
 })
 
 vim.api.nvim_create_user_command('DrexDrawerClose', function()
     require('drex.drawer').close()
 end, {
-    desc = 'Close the DREX drawer window'
+    desc = 'Close the DREX drawer window',
 })
 
 vim.api.nvim_create_user_command('DrexDrawerToggle', function()
     require('drex.drawer').toggle()
 end, {
-    desc = 'Toggle the DREX drawer window'
+    desc = 'Toggle the DREX drawer window',
 })
 
 vim.api.nvim_create_user_command('DrexDrawerFindFile', function()
     require('drex.drawer').find_element('%', false, true)
 end, {
-    desc = 'Jump to the current file in the DREX drawer window'
+    desc = 'Jump to the current file in the DREX drawer window',
 })
 
 vim.api.nvim_create_user_command('DrexDrawerFindFileAndFocus', function()
     require('drex.drawer').find_element('%', true, true)
 end, {
-    desc = 'Jump to the current file in the DREX drawer window and focus it'
+    desc = 'Jump to the current file in the DREX drawer window and focus it',
 })
 
 vim.api.nvim_create_user_command('DrexMark', function(args)

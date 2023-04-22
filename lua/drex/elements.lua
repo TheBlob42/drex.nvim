@@ -128,7 +128,7 @@ function M.collapse_directory(buffer, row)
     end
 
     local start_row -- row of the directory to collapse
-    local end_row   -- last row of content for the collapsing directory
+    local end_row -- last row of content for the collapsing directory
 
     -- slightly different behavior depending on the element in `row`
     -- --> open directory : collapse this directory element
