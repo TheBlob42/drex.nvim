@@ -13,7 +13,11 @@ local function copy_element_strings(selection, extract_fn)
         for row = startRow, endRow, 1 do
             table.insert(lines, extract_fn(vim.fn.getline(row)))
         end
-        vim.notify('Copied ' .. (endRow - startRow + 1) .. ' values to text clipboard', vim.log.levels.INFO, { title = 'DREX' })
+        vim.notify(
+            'Copied ' .. (endRow - startRow + 1) .. ' values to text clipboard',
+            vim.log.levels.INFO,
+            { title = 'DREX' }
+        )
     else
         local line_value = extract_fn(api.nvim_get_current_line())
         table.insert(lines, line_value)

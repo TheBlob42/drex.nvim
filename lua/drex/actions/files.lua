@@ -25,7 +25,7 @@ local function get_destination_path()
 
     if utils.is_directory(line) then
         local same_level_path = utils.get_path(line)
-        local inside_path     = utils.get_element(line) .. utils.path_separator
+        local inside_path = utils.get_element(line) .. utils.path_separator
 
         local _, target = pcall(vim.fn.inputlist, {
             'Please choose the specific destination:',
@@ -102,14 +102,22 @@ local function copy_element(source_element, target_element, force)
     end
 
     if source_element_stats.type ~= 'file' and source_element_stats.type ~= 'directory' then
-        return nil, {}, { "Can't copy '" .. source_element .. "'. Only files and directories are supported not " .. source_element_stats.type .. '!' }
+        return nil,
+            {},
+            {
+                "Can't copy '"
+                    .. source_element
+                    .. "'. Only files and directories are supported not "
+                    .. source_element_stats.type
+                    .. '!',
+            }
     end
 
     ::check_target::
     local target_element_stats = luv.fs_lstat(target_element)
     if target_element_stats then
         local action = 0
-        local element_name = source_element:match('.*'..utils.path_separator..'(.*)$')
+        local element_name = source_element:match('.*' .. utils.path_separator .. '(.*)$')
         local target_path = target_element:sub(1, #target_element - #element_name - 1)
 
         if force then
@@ -118,22 +126,24 @@ local function copy_element(source_element, target_element, force)
             local merge_msg = table.concat({
                 '[CONFIRM MERGE]',
                 'A %s named "%s" already exists in "%s"',
-                "Do you want to merge it with the %s you're copying? (All existing elements will be overwritten)"
+                "Do you want to merge it with the %s you're copying? (All existing elements will be overwritten)",
             }, '\n')
             action = vim.fn.confirm(
                 merge_msg:format(target_element_stats.type, element_name, target_path, source_element_stats.type),
                 '&Yes\n&No\n&Rename',
-                2)
+                2
+            )
         else
             local confirm_msg = table.concat({
                 '[CONFIRM OVERWRITE]',
                 'A %s named "%s" already exists in "%s"',
-                "Do you want to overwrite it with the %s you're copying?"
+                "Do you want to overwrite it with the %s you're copying?",
             }, '\n')
             action = vim.fn.confirm(
                 confirm_msg:format(target_element_stats.type, element_name, target_path, source_element_stats.type),
                 '&Yes\n&No\n&Rename',
-                2)
+                2
+            )
         end
 
         if action == 0 or action == 2 then
@@ -144,7 +154,16 @@ local function copy_element(source_element, target_element, force)
             if source_element_stats.type ~= target_element_stats.type then
                 local success, error = delete_element(target_element, target_element_stats.type)
                 if not success then
-                    return nil, {}, { "Could not overwrite the ".. target_element_stats.type .. " '" .. target_element .. "':\n" .. error }
+                    return nil,
+                        {},
+                        {
+                            'Could not overwrite the '
+                                .. target_element_stats.type
+                                .. " '"
+                                .. target_element
+                                .. "':\n"
+                                .. error,
+                        }
                 end
             end
         end
@@ -189,7 +208,7 @@ local function copy_element(source_element, target_element, force)
             break
         end
 
-        local src_path  = source_element .. utils.path_separator .. name
+        local src_path = source_element .. utils.path_separator .. name
         local dest_path = target_element .. utils.path_separator .. name
 
         local _, files, errors = copy_element(src_path, dest_path, true)
@@ -216,7 +235,7 @@ local function rename_loaded_buffers(old_name, new_name)
                 local new_buf_name = buf_name:gsub(vim.pesc(old_name), new_name)
                 api.nvim_buf_set_name(buf, new_buf_name)
                 api.nvim_buf_call(buf, function()
-                    vim.cmd('silent! w!')  -- avoid 'overwrite existing file' error
+                    vim.cmd('silent! w!') -- avoid 'overwrite existing file' error
                     vim.cmd('silent edit') -- to re-attach LSP etc.
                 end)
             end
@@ -245,7 +264,7 @@ local function create_directories(path)
     local path_segments = vim.split(path, utils.path_separator)
 
     -- if path does not start with '/' or 'C:\' it is not absolute
-    if not (path_segments[1] == "" or path_segments[1]:find('[a-zA-Z]:')) then
+    if not (path_segments[1] == '' or path_segments[1]:find('[a-zA-Z]:')) then
         -- todo? log into some debug file
         return
     end
@@ -257,7 +276,7 @@ local function create_directories(path)
     table.remove(path_segments, #path_segments)
 
     local existing_path -- part of `path` which does already exist
-    local created_path  -- part of `path` which was created
+    local created_path -- part of `path` which was created
 
     for _, segment in ipairs(path_segments) do
         local parent_path = tmp_path .. utils.path_separator
@@ -298,13 +317,15 @@ local function rename_element(old_element, new_element)
     local confirm_msg = table.concat({
         '[CONFIRM OVERWRITE]',
         'A %s named "%s" already exists in "%s"',
-        "Do you want to overwrite it with the %s you're moving?"
+        "Do you want to overwrite it with the %s you're moving?",
     }, '\n')
 
     local second_try = false
     ::rename::
     local new_element_stats = luv.fs_lstat(new_element)
-    local element_name = new_element:match('.*'..utils.path_separator..'([^'..utils.path_separator..']+)'..utils.path_separator..'?$')
+    local element_name = new_element:match(
+        '.*' .. utils.path_separator .. '([^' .. utils.path_separator .. ']+)' .. utils.path_separator .. '?$'
+    )
     local parent_path = new_element:sub(1, #new_element - #element_name - 1)
 
     -- `fs_rename` does not fail on existing files and would just overwrite them, so we have to check manually
@@ -352,7 +373,8 @@ local function rename_element(old_element, new_element)
         elseif vim.startswith(error, 'ENOTEMPTY') then
             action = vim.fn.confirm(
                 -- clarify that it's NOT a merge but an overwrite (old data will be lost)
-                confirm_msg:format(new_element_stats.type, element_name, parent_path, old_element_stats.type) .. ' (This is NOT a merge!)',
+                confirm_msg:format(new_element_stats.type, element_name, parent_path, old_element_stats.type)
+                    .. ' (This is NOT a merge!)',
                 '&Yes\n&No\n&Rename',
                 2
             )
@@ -395,7 +417,11 @@ local function paste(move)
     -- check for an empty clipboard
     if vim.tbl_count(elements) == 0 then
         local action_string = move and 'move' or 'paste'
-        vim.notify('The clipboard is empty! There is nothing to ' .. action_string .. '...', vim.log.levels.INFO, { title = 'DREX' })
+        vim.notify(
+            'The clipboard is empty! There is nothing to ' .. action_string .. '...',
+            vim.log.levels.INFO,
+            { title = 'DREX' }
+        )
         return
     end
 
@@ -405,12 +431,12 @@ local function paste(move)
     end
 
     local pasted_elements = {} -- the elements which have been pasted
-    local files_counter = 0    -- number of files which have been copied (only for 'copy')
-    local errors_found = {}    -- all errors found during the move/copy process
+    local files_counter = 0 -- number of files which have been copied (only for 'copy')
+    local errors_found = {} -- all errors found during the move/copy process
 
     for _, element in ipairs(elements) do
         vim.cmd('redraw') -- clear command input area
-        local name = element:match('.*'..utils.path_separator..'(.*)$')
+        local name = element:match('.*' .. utils.path_separator .. '(.*)$')
         local new_element = dest_path .. name
 
         if move then
@@ -437,7 +463,9 @@ local function paste(move)
             for _, win in ipairs(api.nvim_list_wins()) do
                 local buffer = api.nvim_win_get_buf(win)
                 if vim.tbl_contains(files, api.nvim_buf_get_name(buffer)) then
-                    api.nvim_buf_call(buffer, function() vim.cmd(':silent edit!') end)
+                    api.nvim_buf_call(buffer, function()
+                        vim.cmd(':silent edit!')
+                    end)
                 end
             end
         end
@@ -452,7 +480,15 @@ local function paste(move)
             msg = 'Moved ' .. element_counter .. ' element' .. suffix
             utils.reload_drex_syntax()
         else
-            msg = 'Copied ' .. element_counter .. ' element' .. suffix .. ' (' .. files_counter .. ' file' .. suffix .. ')'
+            msg = 'Copied '
+                .. element_counter
+                .. ' element'
+                .. suffix
+                .. ' ('
+                .. files_counter
+                .. ' file'
+                .. suffix
+                .. ')'
         end
 
         -- if only a single element should and successfully was copied focus it afterwards
@@ -463,9 +499,13 @@ local function paste(move)
                 require('drex.elements').focus_element(window, new_element)
             end
 
-            if not fs.post_next_reload(vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
-                api.nvim_get_current_buf(),
-                focus_fn) then
+            if
+                not fs.post_next_reload(
+                    vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
+                    api.nvim_get_current_buf(),
+                    focus_fn
+                )
+            then
                 focus_fn()
             end
         end
@@ -475,7 +515,11 @@ local function paste(move)
 
     if #errors_found > 0 then
         local msg = table.concat(errors_found, '\n')
-        vim.notify('Could not ' .. (move and 'move' or 'copy') .. ' several elements:\n' .. msg, vim.log.levels.ERROR, { title = 'DREX' })
+        vim.notify(
+            'Could not ' .. (move and 'move' or 'copy') .. ' several elements:\n' .. msg,
+            vim.log.levels.ERROR,
+            { title = 'DREX' }
+        )
     end
 end
 
@@ -520,16 +564,19 @@ function M.multi_rename(mode, opts)
         for row = startRow, endRow, 1 do
             table.insert(elements, utils.get_element(vim.fn.getline(row)))
         end
-        table.sort(elements, function(a, b) return a > b end) -- sort descending
+        -- sort descending
+        table.sort(elements, function(a, b)
+            return a > b
+        end)
     else
         elements = { utils.get_element(api.nvim_get_current_line()) }
     end
 
     local buffer_lines = {
-        "# Confirm changes by leaving this buffer or closing the window and approve the",
-        "# confirmation (only if changes exist). Renaming will be processed line by line",
+        '# Confirm changes by leaving this buffer or closing the window and approve the',
+        '# confirmation (only if changes exist). Renaming will be processed line by line',
         "# from top to bottom. Comment lines starting with '#' will be ignored",
-        unpack(elements)
+        unpack(elements),
     }
 
     local buffer = api.nvim_create_buf(false, true)
@@ -542,8 +589,12 @@ function M.multi_rename(mode, opts)
 
     local on_close = function()
         local buf_elements = vim.tbl_filter(
-            function(line) return not vim.startswith(line, "#") end, -- filter out comment lines
-            api.nvim_buf_get_lines(buffer, 0, -1, false))
+            -- filter out comment lines
+            function(line)
+                return not vim.startswith(line, '#')
+            end,
+            api.nvim_buf_get_lines(buffer, 0, -1, false)
+        )
 
         if table.concat(elements) ~= table.concat(buf_elements) then
             vim.cmd('redraw')
@@ -599,7 +650,9 @@ function M.multi_rename(mode, opts)
                     vim.cmd('redraw')
                     local msg = 'Renamed ' .. renamed_counter .. ' element' .. (renamed_counter > 1 and 's' or '')
                     -- scheduling is needed inside autocommand call to avoid issues with `vim-notify`
-                    vim.schedule(function() vim.notify(msg, vim.log.levels.INFO, { title = 'DREX' }) end)
+                    vim.schedule(function()
+                        vim.notify(msg, vim.log.levels.INFO, { title = 'DREX' })
+                    end)
                 end
             end
         end
@@ -616,10 +669,10 @@ function M.multi_rename(mode, opts)
 
         api.nvim_set_current_buf(buffer)
 
-        api.nvim_clear_autocmds {
+        api.nvim_clear_autocmds({
             group = rename_group,
             buffer = buffer,
-        }
+        })
         api.nvim_create_autocmd('BufUnload', {
             group = rename_group,
             buffer = buffer,
@@ -633,7 +686,7 @@ end
 function M.rename()
     local old_element = utils.get_element(api.nvim_get_current_line())
     local old_element_stats = luv.fs_lstat(old_element)
-    local status_ok, new_element = pcall(vim.fn.input, 'Rename '..old_element_stats.type..': ', old_element, 'file')
+    local status_ok, new_element = pcall(vim.fn.input, 'Rename ' .. old_element_stats.type .. ': ', old_element, 'file')
 
     if not status_ok or new_element == '' then
         return
@@ -652,17 +705,24 @@ function M.rename()
         -- if the renamed element is in scope of the current DREX buffer, focus it
         if vim.startswith(new_element, utils.get_root_path(0)) then
             local window = api.nvim_get_current_win()
-            local focus_fn = function() require('drex.elements').focus_element(window, new_element) end
+            local focus_fn = function()
+                require('drex.elements').focus_element(window, new_element)
+            end
 
-            if not fs.post_next_reload(
-                vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
-                api.nvim_get_current_buf(),
-                focus_fn)
-            then
-                if not fs.post_next_reload(
-                    vim.fn.fnamemodify(old_element, ':h') .. utils.path_separator,
+            if
+                not fs.post_next_reload(
+                    vim.fn.fnamemodify(new_element, ':h') .. utils.path_separator,
                     api.nvim_get_current_buf(),
-                    focus_fn) then
+                    focus_fn
+                )
+            then
+                if
+                    not fs.post_next_reload(
+                        vim.fn.fnamemodify(old_element, ':h') .. utils.path_separator,
+                        api.nvim_get_current_buf(),
+                        focus_fn
+                    )
+                then
                     focus_fn()
                 end
             end
@@ -688,13 +748,13 @@ function M.create(dest_path)
     end
 
     ::check_existance::
-    local new_element = user_input:gsub(utils.path_separator..'$', '')
+    local new_element = user_input:gsub(utils.path_separator .. '$', '')
     local new_element_stats = luv.fs_lstat(new_element)
 
     if new_element_stats then
         local confirm_msg = table.concat({
             'A %s named "%s" already exists',
-            'Do you want to overwrite it?'
+            'Do you want to overwrite it?',
         }, '\n')
         local action = vim.fn.confirm(confirm_msg:format(new_element_stats.type, new_element), '&Yes\n&No\n&Rename', 2)
         if action == 0 or action == 2 then
@@ -718,7 +778,11 @@ function M.create(dest_path)
         local mode = luv.constants.O_CREAT + luv.constants.O_WRONLY + luv.constants.O_TRUNC
         local fd, error = luv.fs_open(user_input, 'w', mode)
         if error then
-            vim.notify("Could not create file '" .. user_input .. "':\n" .. error, vim.log.levels.ERROR, { title = 'DREX' })
+            vim.notify(
+                "Could not create file '" .. user_input .. "':\n" .. error,
+                vim.log.levels.ERROR,
+                { title = 'DREX' }
+            )
             return
         end
 
@@ -731,7 +795,9 @@ function M.create(dest_path)
     -- if the newly created element is in scope of the current DREX buffer, focus it
     if vim.startswith(new_element, utils.get_root_path(0)) then
         local window = api.nvim_get_current_win()
-        local focus_fn = function() require('drex.elements').focus_element(window, new_element) end
+        local focus_fn = function()
+            require('drex.elements').focus_element(window, new_element)
+        end
 
         if not fs.post_next_reload(existing_base_path, api.nvim_get_current_buf(), focus_fn) then
             focus_fn()
@@ -794,7 +860,9 @@ function M.delete(mode)
     -- for multiple entries reverse the order to delete more specific paths first
     -- for the confirm prompt an alphabetical order is used for better readability
     if #elements > 1 then
-        table.sort(elements, function(a, b) return a > b end)
+        table.sort(elements, function(a, b)
+            return a > b
+        end)
     end
 
     local error_msg
@@ -831,7 +899,11 @@ function M.delete(mode)
     end
 
     if delete_counter > 0 then
-        vim.notify('Deleted ' .. delete_counter .. ' element' .. (delete_counter > 1 and 's' or ''), vim.log.levels.INFO, { title = 'DREX' })
+        vim.notify(
+            'Deleted ' .. delete_counter .. ' element' .. (delete_counter > 1 and 's' or ''),
+            vim.log.levels.INFO,
+            { title = 'DREX' }
+        )
     end
 
     if error_msg then

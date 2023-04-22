@@ -10,7 +10,7 @@ local esc = utils.vim_escape
 local sep = utils.path_separator
 
 -- conceal full paths (like `vim-dirvish`)
-vim.cmd([[syntax match DrexPath "\([a-zA-Z]:\)\?\]]..sep..[[\(.*\]]..sep..[[\)\?" conceal cchar= ]])
+vim.cmd([[syntax match DrexPath "\([a-zA-Z]:\)\?\]] .. sep .. [[\(.*\]] .. sep .. [[\)\?" conceal cchar= ]])
 
 -- syntax highlighting for nested files
 for element, _ in pairs(clipboard) do

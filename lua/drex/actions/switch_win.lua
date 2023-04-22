@@ -22,11 +22,11 @@ vim.api.nvim_create_autocmd('ColorScheme', {
 
 local letters = {
     ['a'] = {
-        " ### ",
-        "#   #",
-        "#####",
-        "#   #",
-        "#   #",
+        ' ### ',
+        '#   #',
+        '#####',
+        '#   #',
+        '#   #',
     },
     ['b'] = {
         '#### ',
@@ -57,11 +57,11 @@ local letters = {
         '#####',
     },
     ['f'] = {
-        "#####",
-        "#    ",
-        "#### ",
-        "#    ",
-        "#    ",
+        '#####',
+        '#    ',
+        '#### ',
+        '#    ',
+        '#    ',
     },
     ['g'] = {
         ' ####',
@@ -265,7 +265,7 @@ function M.switch_window()
     end
 
     vim.cmd('normal :<esc>') -- clear command line
-    vim.cmd('redraw')        -- make overlay windows instantly visible
+    vim.cmd('redraw') -- make overlay windows instantly visible
 
     local input = vim.fn.nr2char(vim.fn.getchar())
     local target_window = targets[input]

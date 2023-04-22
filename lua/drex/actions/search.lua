@@ -56,7 +56,7 @@ function M.actions.jump(args)
     local search_line = api.nvim_get_current_line()
 
     if search_line == '' then
-        vim.notify('No match found for "'..args.input..'"!', vim.log.levels.WARN, {})
+        vim.notify('No match found for "' .. args.input .. '"!', vim.log.levels.WARN, {})
         return
     end
 
@@ -82,7 +82,11 @@ function M.actions.jump(args)
         return true
     end
 
-    vim.notify('Could not find "'..utils.get_name(search_line)..'"! Maybe something changed in the meantime...', vim.log.levels.WARN, {})
+    vim.notify(
+        'Could not find "' .. utils.get_name(search_line) .. '"! Maybe something changed in the meantime...',
+        vim.log.levels.WARN,
+        {}
+    )
 end
 
 ---Mark all current visible elements from the search buffer and add them to the DREX clipboard
@@ -153,7 +157,7 @@ function M.search(config)
     local keybindings = {}
     for key, binding in pairs(config.keybindings) do
         if type(binding) ~= 'function' then
-            vim.notify('Keybinding for "'..key..'" is not a function!', vim.log.levels.WARN, {})
+            vim.notify('Keybinding for "' .. key .. '" is not a function!', vim.log.levels.WARN, {})
         else
             keybindings[t(key)] = binding
         end
@@ -220,7 +224,13 @@ function M.search(config)
             local prev_chars_rgx = ''
             for _, c in ipairs(vim.split(input, '')) do
                 c = utils.vim_escape(c)
-                table.insert(matches, vim.fn.matchadd('Search', [[/.\{-}]]..prev_chars_rgx..[[\zs]]..c..[[\(.*\/\)\@!]]..case_rgx_postfix))
+                table.insert(
+                    matches,
+                    vim.fn.matchadd(
+                        'Search',
+                        [[/.\{-}]] .. prev_chars_rgx .. [[\zs]] .. c .. [[\(.*\/\)\@!]] .. case_rgx_postfix
+                    )
+                )
                 prev_chars_rgx = prev_chars_rgx .. c .. [[.\{-}]]
             end
 
@@ -231,7 +241,8 @@ function M.search(config)
                 return rgx:match_str(element)
             end, content)
         else
-            local match_ok, match = pcall(vim.fn.matchadd, 'Search', [[/.\{-}\zs]]..input..[[\(.*\/\)\@!]]..case_rgx_postfix)
+            local match_ok, match =
+                pcall(vim.fn.matchadd, 'Search', [[/.\{-}\zs]] .. input .. [[\(.*\/\)\@!]] .. case_rgx_postfix)
             if match_ok then
                 table.insert(matches, match)
             end
@@ -247,7 +258,7 @@ function M.search(config)
                 local error = rgx:match('.+:.+: (.*)')
                 api.nvim_buf_set_extmark(buf, ns_id, 0, 0, {
                     id = search_error_id,
-                    virt_text = {{ 'REGEX ERROR: ' .. error, 'ErrorMsg' }},
+                    virt_text = { { 'REGEX ERROR: ' .. error, 'ErrorMsg' } },
                     line_hl_group = 'Normal', -- hide CursorLine highlighting
                     number_hl_group = 'ErrorMsg',
                     sign_hl_group = 'ErrorMsg',
@@ -255,10 +266,13 @@ function M.search(config)
             end
         end
 
-        if vim.tbl_isempty(new_content) and vim.tbl_isempty(api.nvim_buf_get_extmark_by_id(buf, ns_id, search_error_id, {})) then
+        if
+            vim.tbl_isempty(new_content)
+            and vim.tbl_isempty(api.nvim_buf_get_extmark_by_id(buf, ns_id, search_error_id, {}))
+        then
             api.nvim_buf_set_extmark(buf, ns_id, 0, 0, {
                 id = search_error_id,
-                virt_text = {{ 'No matches found!', 'WarningMsg' }},
+                virt_text = { { 'No matches found!', 'WarningMsg' } },
                 line_hl_group = 'Normal', -- hide CursorLine highlighting
                 number_hl_group = 'WarningMsg',
                 sign_hl_group = 'WarningMsg',

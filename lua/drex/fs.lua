@@ -57,7 +57,7 @@ end
 connections._add_path = function(path, event_listener, ...)
     -- "unpack" vararg buffers into a set
     local buffers = {}
-    for _, buf in ipairs({...}) do
+    for _, buf in ipairs({ ... }) do
         buffers[buf] = true
     end
 
@@ -117,8 +117,8 @@ function M.watch_directory(buffer, path)
     -- default values for all supported flags
     local flags = {
         watch_entry = false, -- watch for all events in the given directory (not implemented)
-        stat = false,        -- fall back to poll 'stat()' as a fallback (not implemented)
-        recursive = false,   -- also check for changes in subdirectories (not supported on Linux)
+        stat = false, -- fall back to poll 'stat()' as a fallback (not implemented)
+        recursive = false, -- also check for changes in subdirectories (not supported on Linux)
     }
 
     connections._add_path(path, event_listener, buffer)
@@ -138,67 +138,71 @@ function M.watch_directory(buffer, path)
             return
         end
 
-        connections[path].timer:start(100, 0, vim.schedule_wrap(function()
-            -- a 'rename' event is also send if a directory was deleted
-            if event.rename and not luv.fs_access(path, 'r') then
-                -- reload all buffers that displayed `path` (all "parents")
-                local parent_path = vim.fn.fnamemodify(path, ':h:h') .. utils.path_separator
+        connections[path].timer:start(
+            100,
+            0,
+            vim.schedule_wrap(function()
+                -- a 'rename' event is also send if a directory was deleted
+                if event.rename and not luv.fs_access(path, 'r') then
+                    -- reload all buffers that displayed `path` (all "parents")
+                    local parent_path = vim.fn.fnamemodify(path, ':h:h') .. utils.path_separator
+
+                    for buf, _ in pairs(connections[path].buffers) do
+                        if vim.fn.bufexists(buf) ~= 0 then
+                            if utils.get_root_path(buf) == path then
+                                -- since the directory does not exists anymore delete the corresponding DREX buffer
+                                api.nvim_buf_delete(buf, { force = true })
+                            else
+                                -- if the `parent_path` does still exist, reload the corresponding buffer
+                                if luv.fs_access(parent_path, 'r') then
+                                    require('drex').reload_directory(buf, parent_path)
+                                end
+                            end
+                        end
+                    end
+
+                    local clipboard = require('drex.clipboard')
+                    for element, _ in pairs(clipboard.clipboard) do
+                        if vim.startswith(element, path) then
+                            clipboard.delete_from_clipboard(element)
+                        end
+                    end
+
+                    connections._remove_path(path)
+                    return
+                end
 
                 for buf, _ in pairs(connections[path].buffers) do
-                    if vim.fn.bufexists(buf) ~= 0 then
-                        if utils.get_root_path(buf) == path then
-                            -- since the directory does not exists anymore delete the corresponding DREX buffer
-                            api.nvim_buf_delete(buf, { force = true })
-                        else
-                            -- if the `parent_path` does still exist, reload the corresponding buffer
-                            if luv.fs_access(parent_path, 'r') then
-                                require('drex').reload_directory(buf, parent_path)
-                            end
+                    if vim.fn.bufexists(buf) == 0 then
+                        connections._remove_buffer(path, buffer)
+                    else
+                        -- reload `path` within buffer
+                        require('drex').reload_directory(buf, path)
+
+                        -- check if there is a saved post fn and execute it
+                        if connections[path].post_fn[buf] then
+                            pcall(connections[path].post_fn[buf])
+                            connections[path].post_fn[buf] = nil
                         end
                     end
                 end
 
+                -- check clipboard for elements that have been renamed or deleted outside of Neovim
                 local clipboard = require('drex.clipboard')
                 for element, _ in pairs(clipboard.clipboard) do
                     if vim.startswith(element, path) then
-                        clipboard.delete_from_clipboard(element)
+                        if not luv.fs_lstat(element) then
+                            clipboard.delete_from_clipboard(element)
+                        end
                     end
                 end
 
-                connections._remove_path(path)
-                return
-            end
-
-            for buf, _ in pairs(connections[path].buffers) do
-                if vim.fn.bufexists(buf) == 0 then
-                    connections._remove_buffer(path, buffer)
-                else
-                    -- reload `path` within buffer
-                    require('drex').reload_directory(buf, path)
-
-                    -- check if there is a saved post fn and execute it
-                    if connections[path].post_fn[buf] then
-                        pcall(connections[path].post_fn[buf])
-                        connections[path].post_fn[buf] = nil
-                    end
+                -- if no buffers are connected anymore, remove the whole path
+                if vim.tbl_count(connections[path].buffers) == 0 then
+                    connections._remove_path(path)
                 end
-            end
-
-            -- check clipboard for elements that have been renamed or deleted outside of Neovim
-            local clipboard = require('drex.clipboard')
-            for element, _ in pairs(clipboard.clipboard) do
-                if vim.startswith(element, path) then
-                    if not luv.fs_lstat(element) then
-                        clipboard.delete_from_clipboard(element)
-                    end
-                end
-            end
-
-            -- if no buffers are connected anymore, remove the whole path
-            if vim.tbl_count(connections[path].buffers) == 0 then
-                connections._remove_path(path)
-            end
-        end))
+            end)
+        )
     end)
 
     luv.fs_event_start(event_listener, path, flags, event_callback)
@@ -256,9 +260,11 @@ function M.scan_directory(path, root_path)
     local content = {}
     while true do
         local name, type = luv.fs_scandir_next(data)
-        if not name then break end
+        if not name then
+            break
+        end
 
-        table.insert(content, {name, type})
+        table.insert(content, { name, type })
     end
 
     if config.options.sorting then
