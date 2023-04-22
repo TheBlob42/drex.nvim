@@ -239,6 +239,16 @@ Like [vim-dirvish](https://github.com/justinmk/vim-dirvish) every line is just a
 
 See also `:help drex-customization` and the [Wiki](https://github.com/TheBlob42/drex.nvim/wiki) for more information and examples
 
+## Contributing
+
+Contributions are very welcome :-) doesn't matter if it's a bug, a new feature or an addition/change to the wiki. Just go ahead and open an issue or a pull-request to kick off the discussion about it
+
+In regards to code changes and pull-requests please consider the following points:
+
+- follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines for your commit messages
+- make sure you're code is properly formatted using [StyLua](https://github.com/JohnnyMorganz/StyLua)
+  - make sure you have the `lua52` version installed, otherwise there will be problems with `goto` statements (see [here](https://github.com/JohnnyMorganz/StyLua/issues/407))
+
 ## Credit
 
 - [nvim-tree](https://github.com/kyazdani42/nvim-tree.lua)
