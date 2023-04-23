@@ -298,7 +298,7 @@ end
 ---@return boolean
 function M.points_to_existing_directory(path)
     local stats = vim.loop.fs_stat(path)
-    return stats and stats.type == 'directory'
+    return stats ~= nil and stats.type == 'directory'
 end
 
 ---Reset the undo history for `buffer`

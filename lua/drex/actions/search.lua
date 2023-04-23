@@ -57,7 +57,7 @@ function M.actions.jump(args)
 
     if search_line == '' then
         vim.notify('No match found for "' .. args.input .. '"!', vim.log.levels.WARN, {})
-        return
+        return false
     end
 
     local row
@@ -87,6 +87,7 @@ function M.actions.jump(args)
         vim.log.levels.WARN,
         {}
     )
+    return false
 end
 
 ---Mark all current visible elements from the search buffer and add them to the DREX clipboard
