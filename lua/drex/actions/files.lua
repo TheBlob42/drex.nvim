@@ -13,7 +13,7 @@ local rename_group = api.nvim_create_augroup('DrexRenameBuffer', {})
 ---Return the path of the current line as destination path
 ---If the line represents a directory ask the user if the destination should be inside this directory or on the same level instead
 ---If the user does not choose any option but cancels instead return `nil`
----@return string
+---@return string?
 local function get_destination_path()
     local line = api.nvim_get_current_line()
 
@@ -259,7 +259,7 @@ end
 ---</pre>
 ---
 ---@param path string The path to create directories for (absolute path)
----@return table
+---@return table?
 local function create_directories(path)
     local path_segments = vim.split(path, utils.path_separator)
 

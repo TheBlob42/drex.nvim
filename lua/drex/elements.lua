@@ -16,7 +16,7 @@ local config = require('drex.config')
 ---- The target element does not exist
 ---@param buffer number The target DREX buffer
 ---@param path string? Path of the target element (defaults to the current file)
----@return number row The (1-based) row of the target element, `nil` when `path` could not be found
+---@return number? row The (1-based) row of the target element, `nil` when `path` could not be found
 local function expand_path(buffer, path)
     path = utils.expand_path(path or '%')
     local root_path = utils.get_root_path(buffer)
