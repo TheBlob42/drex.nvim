@@ -55,6 +55,15 @@ end
 local function delete_element(element, element_type)
     element_type = element_type or luv.fs_lstat(element).type
 
+    local delete_fn = vim.tbl_get(require('drex.config').options, 'actions', 'files', 'delete_cmd')
+    if delete_fn then
+        if type(delete_fn) == 'function' then
+            return delete_fn(element, element_type)
+        else
+            return utils.cmd(delete_fn, { element })
+        end
+    end
+
     if element_type == 'directory' then
         local data, scan_error = luv.fs_scandir(element)
         if scan_error then

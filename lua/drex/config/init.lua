@@ -33,6 +33,11 @@ local defaults = {
             labels = 'abcdefghijklmnopqrstuvwxyz',
         },
     },
+    actions = {
+        files = {
+            delete_cmd = nil,
+        },
+    },
     disable_default_keybindings = false,
     keybindings = {
         ['n'] = {
@@ -302,6 +307,38 @@ local function validate_keybindings(keybindings)
     return true
 end
 
+---Helper function to check for a valid actions configuration
+---@param actions table The configuration table to validate
+---@return boolean
+local function validate_actions_config(actions)
+    local errors = {}
+    if actions then
+        local delete_cmd = vim.tbl_get(actions, 'files', 'delete_cmd')
+        if delete_cmd then
+            local type = type(delete_cmd)
+            if type == 'string' and vim.fn.executable(delete_cmd) == 0 then
+                table.insert(
+                    errors,
+                    'The custom delete command "' .. delete_cmd .. '" does not exist (or is not executable)'
+                )
+            elseif type ~= 'function' and type ~= 'string' then
+                table.insert(errors, 'Invalid type "' .. type .. '" for custom delete command')
+            end
+        end
+    end
+
+    if vim.tbl_count(errors) > 0 then
+        vim.notify(
+            'There are problems with the actions configuration, fall back to the default settings!\n'
+                .. table.concat(errors, '\n'),
+            vim.log.levels.WARN,
+            { title = 'DREX' }
+        )
+    end
+
+    return true
+end
+
 M.options = defaults
 
 ---Configure the global DREX settings
@@ -344,6 +381,11 @@ function M.configure(user_config)
     -- check for a valid sort function
     if not validate_sorting(M.options.sorting) then
         M.options.sorting = defaults.sorting
+    end
+
+    -- check for custom actions configuration
+    if not validate_actions_config(M.options.actions) then
+        M.options.actions = defaults.actions
     end
 
     if M.options.hijack_netrw then

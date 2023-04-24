@@ -1,6 +1,7 @@
 local M = {}
 
 local api = vim.api
+local luv = vim.loop
 local config = require('drex.config')
 
 -- ###############################################
@@ -388,6 +389,57 @@ function M.shorten_path(path, max_width)
     end
 
     return path
+end
+
+---Execute the given `cmd` and check if its execution was successful (via the exit code)
+---This function does not check nor return the output of the given `cmd`
+---@param cmd string The command which should be executed
+---@param args table? The arguments which are provided to the command (default {})
+---@param timeout number? Maximum time (in ms) to wait before aborting (default 3000)
+---@return boolean successful If the command execution was successful
+---@return string? error_message An error message if something went wrong (`nil` otherwise)
+function M.cmd(cmd, args, timeout)
+    args = args or {}
+    timeout = timeout or 3000
+
+    local success = nil
+    local error = nil
+
+    local stdin = luv.new_pipe()
+    local stdout = luv.new_pipe()
+    local stderr = luv.new_pipe()
+    assert(stdin)
+    assert(stdout)
+    assert(stderr)
+
+    luv.spawn(cmd, {
+        args = args,
+        stdio = { stdin, stdout, stderr },
+    }, function(exit_code)
+        success = exit_code == 0
+    end)
+
+    luv.read_start(stdout, function(err)
+        if err then
+            success = false
+        end
+    end)
+
+    luv.read_start(stderr, function(_, data)
+        error = error or data -- only catch the first error returned
+    end)
+
+    local done = vim.wait(timeout, function()
+        return success ~= nil
+    end)
+
+    if not done then
+        success = false
+        error = 'The command "' .. cmd .. '" timed out in ' .. timeout .. 'ms!'
+        luv.shutdown(stdin, function() end)
+    end
+
+    return success, error
 end
 
 return M
