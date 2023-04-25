@@ -148,6 +148,11 @@ However you may configure certain settings to your liking.
 			link = "",
 			others = "",
 		},
+		actions = {
+			files = {
+				delete_cmd = nil,
+			},
+		},
 		colored_icons = true,
 		hide_cursor = true,
 		hijack_netrw = false,
@@ -266,6 +271,38 @@ this options to `false`.
 
 Note: If you have the `nvim-web-devicons` plugin not installed, this options
 does not do anything.
+
+------------------------------------------------------------------------------
+ACTIONS                                           *drex-configuration-actions*
+
+Customize certain aspects of the actions provided by DREX out of the box.
+
+FILES
+
+- `delete_cmd`	Custom command for the deletion of elements
+				Can either be a string that points to an executable on your
+				`$PATH` or a lua function
+
+An executable command will just get passed the absolute element path:
+>
+	<cmd> /home/user/doc.txt
+<
+A lua function receives the absolute element path as its first and the element
+type ("file", "directory", etc.) as its second argument:
+>
+	function custom_delete(element, type)
+		if type == 'directory' then
+			delete_dir(element)
+		else
+			delete(element)
+		end
+	end
+<
+See the following projects for some "trash" command line implementations:
+
+- https://github.com/andreafrancia/trash-cli
+- https://github.com/b4b4r07/gomi
+- https://github.com/ali-rantakari/trash
 
 ------------------------------------------------------------------------------
 CURSOR                                             *drex-configuration-cursor*

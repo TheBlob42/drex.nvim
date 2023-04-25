@@ -15,6 +15,7 @@ DrexUnmark	drex.txt	/*DrexUnmark*
 drex-announcement	drex.txt	/*drex-announcement*
 drex-commands	drex.txt	/*drex-commands*
 drex-configuration	drex.txt	/*drex-configuration*
+drex-configuration-actions	drex.txt	/*drex-configuration-actions*
 drex-configuration-callbacks	drex.txt	/*drex-configuration-callbacks*
 drex-configuration-cursor	drex.txt	/*drex-configuration-cursor*
 drex-configuration-drawer	drex.txt	/*drex-configuration-drawer*
