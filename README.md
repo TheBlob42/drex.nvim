@@ -178,6 +178,11 @@ require('drex.config').configure {
             labels = 'abcdefghijklmnopqrstuvwxyz',
         },
     },
+    actions = {
+      files = {
+        delete_cmd = nil,
+      },
+    },
     disable_default_keybindings = false,
     keybindings = {
         ['n'] = {
