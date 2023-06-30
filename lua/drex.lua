@@ -98,7 +98,13 @@ function M.open_directory_buffer(path)
 
     -- set the buffer to the current window in order to properly load it
     api.nvim_buf_set_option(buffer, 'filetype', 'drex')
-    api.nvim_set_current_buf(buffer)
+
+    if config.options.keepalt and vim.w.coming_from_another_drex_buffer then
+        vim.cmd('keepalt b ' .. buffer)
+    else
+        vim.w.coming_from_another_drex_buffer = 1
+        api.nvim_set_current_buf(buffer)
+    end
 
     -- set buffer content for new and "damaged" DREX buffers
     load_buffer_content(buffer)

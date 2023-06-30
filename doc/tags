@@ -20,6 +20,7 @@ drex-configuration-callbacks	drex.txt	/*drex-configuration-callbacks*
 drex-configuration-cursor	drex.txt	/*drex-configuration-cursor*
 drex-configuration-drawer	drex.txt	/*drex-configuration-drawer*
 drex-configuration-icons	drex.txt	/*drex-configuration-icons*
+drex-configuration-keepalt	drex.txt	/*drex-configuration-keepalt*
 drex-configuration-keybindings	drex.txt	/*drex-configuration-keybindings*
 drex-configuration-netrw	drex.txt	/*drex-configuration-netrw*
 drex-configuration-sorting	drex.txt	/*drex-configuration-sorting*
