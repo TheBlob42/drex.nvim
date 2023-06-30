@@ -234,7 +234,9 @@ function M.open_file(pre, change_tab)
 
     -- if used in drawer, switch to another window first
     local win = api.nvim_get_current_win()
-    if win == require('drex.drawer').get_drawer_window() and not change_tab then
+    local is_drawer = win == require('drex.drawer').get_drawer_window()
+
+    if is_drawer and not change_tab then
         if config.options.drawer.window_picker.enabled then
             if not require('drex.actions.switch_win').switch_window() then
                 -- user has not chosen a valid window or aborted
@@ -260,8 +262,17 @@ function M.open_file(pre, change_tab)
         vim.cmd(pre)
     end
 
-    -- use `pcall` in case of a VIM error (e.g. file is already opened in another VIM instance - E325)
-    pcall(vim.cmd, ':e ' .. utils.get_element(line))
+    -- since we're leaving into a non-DREX buffer we have to reset this
+    vim.w.coming_from_another_drex_buffer = nil
+
+    -- as the drawer is opening the file in another window we have to ignore keepalt here
+    if is_drawer or not config.options.keepalt then
+        pcall(vim.cmd.e, utils.get_element(line))
+    else
+        -- use `pcall` in case of a VIM error (e.g. file is already opened in another VIM instance - E325)
+        ---@diagnostic disable-next-line: param-type-mismatch
+        pcall(vim.cmd, 'keepalt e ' .. utils.get_element(line))
+    end
 end
 
 ---Find the element represented by `path` and set the cursor in `win` to the corresponding line

@@ -156,6 +156,7 @@ However you may configure certain settings to your liking.
 		colored_icons = true,
 		hide_cursor = true,
 		hijack_netrw = false,
+		keepalt = false,
 		sorting = function(a, b)
 			local aname, atype = a[1], a[2]
 			local bname, btype = b[1], b[2]
@@ -329,6 +330,23 @@ Note: This option can only be activated once either on the plugin startup or
 when calling `require('drex.config').configure {}` . Once it has been set it
 can not be deactivated again (in comparison to other options) because this
 deletes the |FileExplorer| group which can not be restored.
+
+------------------------------------------------------------------------------
+KEEPALT                                           *drex-configuration-keepalt*
+
+Keep the last |alternate-file| while navigating through multiple DREX buffers.
+
+Consider the following example with this option enabled:
+
+- start in file `A`
+- enter DREX buffer `B` (alt file `A`)
+- enter DREX buffer `C` (alt file `A`)
+- enter DREX buffer `D` (alt file `A`)
+- enter file `E`        (alt file `A`)
+
+If you use |CTRL-^| in file `E` you will be back in file `A`. The DREX buffers
+in between have been ignored for the alternate file/buffer. See |keepalt| for
+more information.
 
 ------------------------------------------------------------------------------
 SORTING                                           *drex-configuration-sorting*
