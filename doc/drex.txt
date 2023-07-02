@@ -335,18 +335,35 @@ deletes the |FileExplorer| group which can not be restored.
 KEEPALT                                           *drex-configuration-keepalt*
 
 Keep the last |alternate-file| while navigating through multiple DREX buffers.
+It behaves similar to the |g:netrw_altfile| option.
+>
+	keepalt = false
+<
+Set this option to `true` to activate it.
 
-Consider the following example with this option enabled:
+Consider the following example with this option disabled:
 
 - start in file `A`
-- enter DREX buffer `B` (alt file `A`)
-- enter DREX buffer `C` (alt file `A`)
-- enter DREX buffer `D` (alt file `A`)
-- enter file `E`        (alt file `A`)
+- enter DREX buffer `B` (altfile `A`)
+- enter DREX buffer `C` (altfile `B`)
+- enter DREX buffer `D` (altfile `C`)
+- enter file `E`        (altfile `D`)
+
+Using |CTRL-^| in file `E` will jump back to the DREX buffer `D`. If this is
+exactly what you would expect, you might not need this option.
+
+Now consider this example with this option enabled in comparison:
+
+- start in file `A`
+- enter DREX buffer `B` (altfile `A`)
+- enter DREX buffer `C` (altfile `A`)
+- enter DREX buffer `D` (altfile `A`)
+- enter file `E`        (altfile `A`)
 
 If you use |CTRL-^| in file `E` you will be back in file `A`. The DREX buffers
-in between have been ignored for the alternate file/buffer. See |keepalt| for
-more information.
+in between have been ignored for the alternate file/buffer.
+
+Note: Also see |keepalt| for more information.
 
 ------------------------------------------------------------------------------
 SORTING                                           *drex-configuration-sorting*
