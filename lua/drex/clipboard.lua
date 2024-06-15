@@ -95,9 +95,9 @@ function M.open_clipboard_window()
 
     local buffer = api.nvim_create_buf(false, true)
     api.nvim_buf_set_lines(buffer, 0, -1, false, buf_lines)
-    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
-    api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
-    api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit')
+    api.nvim_set_option_value('buftype', 'nofile', { buf = buffer })
+    api.nvim_set_option_value('bufhidden', 'wipe', { buf = buffer })
+    api.nvim_set_option_value('syntax', 'gitcommit', { buf = buffer })
     api.nvim_buf_set_name(buffer, 'DREX Clipboard')
     utils.buf_clear_undo_history(buffer)
 
@@ -111,7 +111,7 @@ function M.open_clipboard_window()
                     element = element:sub(1, #element - 1)
                 end
 
-                if luv.fs_access(element, 'r') then
+                if luv.fs_access(element, 'R') then
                     table.insert(buf_elements, element)
                 end
             end

@@ -29,7 +29,7 @@ local function expand_path(buffer, path)
         error("Can not find '" .. path .. "'! Wrong root path ('" .. root_path .. "').", 0)
     end
 
-    if not luv.fs_access(path, 'r') then
+    if not luv.fs_access(path, 'R') then
         error("'" .. path .. "' does not exist!", 0)
     end
 
@@ -98,10 +98,11 @@ function M.expand_element(buffer, row)
             return
         end
 
-        api.nvim_buf_set_option(buffer, 'modifiable', true)
+        api.nvim_set_option_value('modifiable', true, { buf = buffer })
+        ---@diagnostic disable-next-line: param-type-mismatch
         vim.fn.appendbufline(buffer, row, sub_dir_content)
         utils.set_icon(config.options.icons.dir_open, row, buffer)
-        api.nvim_buf_set_option(buffer, 'modifiable', false)
+        api.nvim_set_option_value('modifiable', false, { buf = buffer })
 
         fs.watch_directory(buffer, path)
     end
@@ -176,14 +177,14 @@ function M.collapse_directory(buffer, row)
         end_row = #buffer_lines
     end
 
-    api.nvim_buf_set_option(buffer, 'modifiable', true)
+    api.nvim_set_option_value('modifiable', true, { buf = buffer })
     -- check that the directory is not empty (no contents)
     if start_row ~= end_row then
         api.nvim_buf_set_lines(buffer, start_row, end_row, false, {})
     end
     utils.set_icon(config.options.icons.dir_closed, start_row, buffer)
     api.nvim_win_set_cursor(0, { start_row, 0 })
-    api.nvim_buf_set_option(buffer, 'modifiable', false)
+    api.nvim_set_option_value('modifiable', false, { buf = buffer })
 
     fs.unwatch_directory(buffer, path)
 end
@@ -288,7 +289,7 @@ function M.focus_element(win, path)
     if win == 0 then
         -- get the "real" window id for the current window (instead of 0)
         -- `win_execute` does not work correctly with the value '0'
-        win = vim.fn.win_getid()
+        win = assert(vim.fn.win_getid())
     end
 
     if not api.nvim_win_is_valid(win) then

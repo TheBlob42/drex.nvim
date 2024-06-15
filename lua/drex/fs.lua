@@ -64,7 +64,7 @@ connections._add_path = function(path, event_listener, ...)
     connections[path] = {
         buffers = buffers,
         stop = function()
-            luv.fs_event_stop(event_listener)
+            event_listener:stop()
         end,
         post_fn = {},
         timer = luv.new_timer(),
@@ -113,7 +113,7 @@ function M.watch_directory(buffer, path)
         return
     end
 
-    local event_listener = luv.new_fs_event()
+    local event_listener = assert(luv.new_fs_event())
     -- default values for all supported flags
     local flags = {
         watch_entry = false, -- watch for all events in the given directory (not implemented)
@@ -143,7 +143,7 @@ function M.watch_directory(buffer, path)
             0,
             vim.schedule_wrap(function()
                 -- a 'rename' event is also send if a directory was deleted
-                if event.rename and not luv.fs_access(path, 'r') then
+                if event.rename and not luv.fs_access(path, 'R') then
                     -- reload all buffers that displayed `path` (all "parents")
                     local parent_path = vim.fn.fnamemodify(path, ':h:h') .. utils.path_separator
 
@@ -154,7 +154,7 @@ function M.watch_directory(buffer, path)
                                 api.nvim_buf_delete(buf, { force = true })
                             else
                                 -- if the `parent_path` does still exist, reload the corresponding buffer
-                                if luv.fs_access(parent_path, 'r') then
+                                if luv.fs_access(parent_path, 'R') then
                                     require('drex').reload_directory(buf, parent_path)
                                 end
                             end
@@ -235,7 +235,7 @@ end
 ---@return table? content Directory content lines (formatted) or `nil`
 function M.scan_directory(path, root_path)
     -- ensure that it's an absolute path
-    path = vim.fn.fnamemodify(path, ':p')
+    path = assert(vim.fn.fnamemodify(path, ':p'))
 
     -- ensure that the target is an existing directory
     if not utils.points_to_existing_directory(path) then
@@ -248,10 +248,11 @@ function M.scan_directory(path, root_path)
         print(error)
         return
     end
+    assert(data, 'no error but also not data')
 
     -- if given a `root_path` calculate the needed indentation
     local indentation = '  '
-    if root_path and path ~= root_path then
+    if root_path and path and path ~= root_path then
         local relative_path = path:gsub('^' .. vim.pesc(root_path), '')
         local _, count = relative_path:gsub(utils.path_separator, '')
         indentation = indentation .. string.rep('  ', count)

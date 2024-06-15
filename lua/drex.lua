@@ -32,9 +32,9 @@ local function load_buffer_content(buffer)
         local path = utils.get_root_path(buffer)
         local dir_content = fs.scan_directory(path)
         if dir_content and #dir_content > 0 then
-            api.nvim_buf_set_option(buffer, 'modifiable', true)
+            api.nvim_set_option_value('modifiable', true, { buf = buffer })
             api.nvim_buf_set_lines(buffer, 0, -1, false, dir_content)
-            api.nvim_buf_set_option(buffer, 'modifiable', false)
+            api.nvim_set_option_value('modifiable', false, { buf = buffer })
         end
 
         return true
@@ -82,7 +82,7 @@ function M.open_directory_buffer(path)
     end
 
     local buffer_name = 'drex://' .. path
-    local buffer = vim.fn.bufnr('^' .. buffer_name .. '$')
+    local buffer = assert(vim.fn.bufnr('^' .. buffer_name .. '$'))
     -- if a corresponding DREX buffer does not exist yet create one
     if buffer == -1 then
         buffer = api.nvim_create_buf(true, true)
@@ -93,12 +93,12 @@ function M.open_directory_buffer(path)
     -- to make it work with `airblade/vim-rooter`
     api.nvim_buf_set_var(buffer, 'rootDir', path)
     -- (re)set some basic buffer options
-    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
-    api.nvim_buf_set_option(buffer, 'modifiable', false)
-    api.nvim_buf_set_option(buffer, 'shiftwidth', 2)
+    api.nvim_set_option_value('buftype', 'nofile', { buf = buffer })
+    api.nvim_set_option_value('modifiable', false, { buf = buffer })
+    api.nvim_set_option_value('shiftwidth', 2, { buf = buffer })
 
     -- set the buffer to the current window in order to properly load it
-    api.nvim_buf_set_option(buffer, 'filetype', 'drex')
+    api.nvim_set_option_value('filetype', 'drex', { buf = buffer })
 
     if config.options.keepalt and vim.w.coming_from_another_drex_buffer then
         vim.cmd('keepalt b ' .. buffer)
@@ -213,9 +213,9 @@ function M.reload_directory(buffer, path)
 
     local new_content = fs.scan_directory(path, utils.get_root_path(buffer))
     if new_content then
-        api.nvim_buf_set_option(buffer, 'modifiable', true)
+        api.nvim_set_option_value('modifiable', true, { buf = buffer })
         api.nvim_buf_set_lines(buffer, start_row, end_row, false, new_content)
-        api.nvim_buf_set_option(buffer, 'modifiable', false)
+        api.nvim_set_option_value('modifiable', false, { buf = buffer })
     else
         -- if the directory scan failed abort right here
         return

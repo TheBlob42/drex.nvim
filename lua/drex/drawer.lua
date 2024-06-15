@@ -21,7 +21,7 @@ if vim.g.SessionLoad == 1 and vim.g.DrexDrawers then
                 drawer_windows[tab] = win
                 drawer_widths[tab] = width
                 api.nvim_win_set_width(win, width)
-                api.nvim_win_set_option(win, 'winfixwidth', true)
+                api.nvim_set_option_value('winfixwidth', true, { win = win })
                 break
             end
         end
@@ -68,7 +68,7 @@ function M.open()
         drawer_windows[tab] = win
 
         -- set `winfixwidth` to prevent resizing on window deletion & balancing
-        api.nvim_win_set_option(win, 'winfixwidth', true)
+        api.nvim_set_option_value('winfixwidth', true, { win = win })
         -- resize drawer to saved width (for this tab) or default
         local width = drawer_widths[tab] or config.options.drawer.default_width
         M.set_width(width, false, true)
@@ -120,8 +120,9 @@ function M.set_width(width, delta, resize)
         drawer_widths[tab] = width
     end
 
-    if resize and M.get_drawer_window() then
-        api.nvim_win_set_width(M.get_drawer_window(), drawer_widths[tab])
+    local drawer_win = M.get_drawer_window()
+    if resize and drawer_win then
+        api.nvim_win_set_width(drawer_win, drawer_widths[tab])
     end
 
     save()
@@ -148,6 +149,7 @@ function M.find_element(path, focus_drawer_window, resize_drawer_window)
         M.open()
         drawer_window = M.get_drawer_window()
     end
+    assert(drawer_window, "can't be nil at this point")
 
     require('drex.elements').focus_element(drawer_window, path)
 

@@ -39,7 +39,7 @@ end
 ---@param selection boolean? Indicator if called from visual mode (if so use last selection)
 function M.copy_name(selection)
     utils.check_if_drex_buffer(0)
-    copy_element_strings(selection, utils.get_name)
+    copy_element_strings(selection or false, utils.get_name)
 end
 
 ---Copy the element's path relative to the current root path
@@ -47,7 +47,7 @@ end
 function M.copy_relative_path(selection)
     utils.check_if_drex_buffer(0)
     local root_path = utils.get_root_path(0)
-    copy_element_strings(selection, function(str)
+    copy_element_strings(selection or false, function(str)
         local name = utils.get_name(str)
         local path = utils.get_path(str)
         local rel_path = path:gsub(vim.pesc(root_path), '')
@@ -59,7 +59,7 @@ end
 ---@param selection boolean? Indicator if called from visual mode (if so use last selection)
 function M.copy_absolute_path(selection)
     utils.check_if_drex_buffer(0)
-    copy_element_strings(selection, utils.get_element)
+    copy_element_strings(selection or false, utils.get_element)
 end
 
 return M

@@ -50,7 +50,7 @@ end
 ---If the element is a directory this also deletes all of its content
 ---@param element string The element you want to delete
 ---@param element_type string? (Optional) The type of the element, if already known
----@return boolean success Indicates if the deletion was successful
+---@return boolean? success Indicates if the deletion was successful
 ---@return string? error The corresponding error message if there was one
 local function delete_element(element, element_type)
     element_type = element_type or luv.fs_lstat(element).type
@@ -69,6 +69,7 @@ local function delete_element(element, element_type)
         if scan_error then
             return false, scan_error
         end
+        assert(data)
 
         while true do
             local name, type = luv.fs_scandir_next(data)
@@ -137,10 +138,12 @@ local function copy_element(source_element, target_element, force)
                 'A %s named "%s" already exists in "%s"',
                 "Do you want to merge it with the %s you're copying? (All existing elements will be overwritten)",
             }, '\n')
-            action = vim.fn.confirm(
-                merge_msg:format(target_element_stats.type, element_name, target_path, source_element_stats.type),
-                '&Yes\n&No\n&Rename',
-                2
+            action = assert(
+                vim.fn.confirm(
+                    merge_msg:format(target_element_stats.type, element_name, target_path, source_element_stats.type),
+                    '&Yes\n&No\n&Rename',
+                    2
+                )
             )
         else
             local confirm_msg = table.concat({
@@ -148,10 +151,12 @@ local function copy_element(source_element, target_element, force)
                 'A %s named "%s" already exists in "%s"',
                 "Do you want to overwrite it with the %s you're copying?",
             }, '\n')
-            action = vim.fn.confirm(
-                confirm_msg:format(target_element_stats.type, element_name, target_path, source_element_stats.type),
-                '&Yes\n&No\n&Rename',
-                2
+            action = assert(
+                vim.fn.confirm(
+                    confirm_msg:format(target_element_stats.type, element_name, target_path, source_element_stats.type),
+                    '&Yes\n&No\n&Rename',
+                    2
+                )
             )
         end
 
@@ -199,9 +204,11 @@ local function copy_element(source_element, target_element, force)
     if error then
         return nil, {}, { error }
     end
+    assert(data, 'no error but also no data')
 
     local success, mkdir_error = luv.fs_mkdir(target_element, source_element_stats.mode)
     if not success then
+        assert(mkdir_error, 'not successful but no mkdir error returned')
         -- do not abort if the new directory already exists
         if not vim.startswith(mkdir_error, 'EEXIST') then
             return nil, {}, { mkdir_error }
@@ -351,7 +358,10 @@ local function rename_element(old_element, new_element)
         end
 
         if action == 3 then
-            new_element = vim.fn.input('New name: ', new_element)
+            new_element = vim.fn.input({
+                prompt = 'New name: ',
+                default = new_element,
+            })
             goto rename
         end
     end
@@ -372,21 +382,25 @@ local function rename_element(old_element, new_element)
         rename_loaded_buffers(old_element, new_element)
         return new_element, nil
     elseif not second_try then
+        assert(error, 'not successful but no rename error returned')
+        assert(new_element_stats, 'rename error but no element already existing')
         local action = 0
         if vim.startswith(error, 'ENOTDIR') or vim.startswith(error, 'EISDIR') then
-            action = vim.fn.confirm(
-                confirm_msg:format(new_element_stats.type, element_name, parent_path, old_element_stats.type),
-                '&Yes\n&No\n&Rename',
-                2
+            action = assert(
+                vim.fn.confirm(
+                    confirm_msg:format(new_element_stats.type, element_name, parent_path, old_element_stats.type),
+                    '&Yes\n&No\n&Rename',
+                    2
+                )
             )
         elseif vim.startswith(error, 'ENOTEMPTY') then
-            action = vim.fn.confirm(
+            action = assert(vim.fn.confirm(
                 -- clarify that it's NOT a merge but an overwrite (old data will be lost)
                 confirm_msg:format(new_element_stats.type, element_name, parent_path, old_element_stats.type)
                     .. ' (This is NOT a merge!)',
                 '&Yes\n&No\n&Rename',
                 2
-            )
+            ))
         else
             return nil, error
         end
@@ -405,7 +419,10 @@ local function rename_element(old_element, new_element)
         end
 
         if action == 3 then
-            new_element = vim.fn.input('New name: ', new_element)
+            new_element = vim.fn.input({
+                prompt = 'New name: ',
+                default = new_element,
+            })
             goto rename
         end
     end
@@ -590,9 +607,9 @@ function M.multi_rename(mode, opts)
 
     local buffer = api.nvim_create_buf(false, true)
     api.nvim_buf_set_lines(buffer, 0, -1, false, buffer_lines)
-    api.nvim_buf_set_option(buffer, 'buftype', 'nofile')
-    api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
-    api.nvim_buf_set_option(buffer, 'syntax', 'gitcommit') -- to shade comment lines
+    api.nvim_set_option_value('buftype', 'nofile', { buf = buffer })
+    api.nvim_set_option_value('bufhidden', 'wipe', { buf = buffer })
+    api.nvim_set_option_value('syntax', 'gitcommit', { buf = buffer }) -- to shade comment lines
     api.nvim_buf_set_name(buffer, 'DREX Rename')
     utils.buf_clear_undo_history(buffer)
 
@@ -694,7 +711,7 @@ end
 ---The path of the renamed element can be changed and new non-existing directories will be created automatically
 function M.rename()
     local old_element = utils.get_element(api.nvim_get_current_line())
-    local old_element_stats = luv.fs_lstat(old_element)
+    local old_element_stats = assert(luv.fs_lstat(old_element))
     local status_ok, new_element = pcall(vim.fn.input, 'Rename ' .. old_element_stats.type .. ': ', old_element, 'file')
 
     if not status_ok or new_element == '' then
@@ -775,7 +792,11 @@ function M.create(dest_path)
         end
 
         if action == 3 then
-            user_input = vim.fn.input('New name: ', user_input, 'dir')
+            user_input = vim.fn.input({
+                prompt = 'New name: ',
+                default = user_input,
+                completion = 'dir',
+            })
             goto check_existance
         end
     end
@@ -794,6 +815,7 @@ function M.create(dest_path)
             )
             return
         end
+        assert(fd, 'no error but fd is not present')
 
         -- libuv creates files with executable permissions (1101)
         -- therefore chmod the result to default permissions ('rw-r--r--')

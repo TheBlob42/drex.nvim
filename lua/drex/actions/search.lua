@@ -148,10 +148,11 @@ function M.search(config)
 
     api.nvim_buf_set_lines(buf, 0, -1, false, content)
     api.nvim_buf_set_name(buf, 'DREX Search')
-    api.nvim_buf_set_option(buf, 'syntax', 'drex')
-    api.nvim_buf_set_option(buf, 'buftype', 'nofile')
-    api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
+    api.nvim_set_option_value('syntax', 'drex', { buf = buf })
+    api.nvim_set_option_value('buftype', 'nofile', { buf = buf })
+    api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
     api.nvim_set_current_buf(buf)
+    ---@diagnostic disable-next-line: param-type-mismatch
     vim.fn.winrestview(view)
 
     -- check keybindings and convert keys into terminal codes
@@ -235,11 +236,11 @@ function M.search(config)
                 prev_chars_rgx = prev_chars_rgx .. c .. [[.\{-}]]
             end
 
-            local rgx = vim.regex(prev_chars_rgx .. case_rgx_postfix)
+            local rgx = assert(vim.regex(prev_chars_rgx .. case_rgx_postfix))
 
             new_content = vim.tbl_filter(function(line)
                 local element = utils.get_name(line)
-                return rgx:match_str(element)
+                return rgx:match_str(element) and true or false
             end, content)
         else
             local match_ok, match =
@@ -249,10 +250,10 @@ function M.search(config)
             end
 
             local rgx_ok, rgx = pcall(vim.regex, input .. case_rgx_postfix)
-            if rgx_ok then
+            if rgx_ok and rgx then
                 new_content = vim.tbl_filter(function(line)
                     local element = utils.get_name(line)
-                    return rgx:match_str(element)
+                    return rgx:match_str(element) and true or false
                 end, content)
             else
                 new_content = {}

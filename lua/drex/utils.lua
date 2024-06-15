@@ -168,7 +168,7 @@ end
 ---@param buffer number Buffer handle, or 0 for current buffer
 ---@return boolean
 function M.is_drex_buffer(buffer)
-    return vim.api.nvim_buf_get_option(buffer, 'filetype') == 'drex'
+    return vim.api.nvim_get_option_value('filetype', { buf = buffer }) == 'drex'
 end
 
 ---Check if the given `buffer` is a DREX buffer
@@ -250,7 +250,7 @@ function M.floating_win(buffer, on_leave)
         border = 'rounded',
         noautocmd = false,
     })
-    api.nvim_win_set_option(win, 'wrap', false)
+    api.nvim_set_option_value('wrap', false, { win = win })
 
     api.nvim_create_autocmd('WinLeave', {
         buffer = buffer,
@@ -283,7 +283,7 @@ end
 ---@param highlight string? (Optional) Highlight group to use (defaults to 'None')
 function M.echo(msg, history, highlight)
     highlight = highlight or 'None'
-    api.nvim_echo({ { msg, highlight } }, history, {})
+    api.nvim_echo({ { msg, highlight } }, history or false, {})
 end
 
 ---Expand the given path properly so it can be used within DREX
@@ -291,7 +291,7 @@ end
 ---@param path string The path string which should be expanded
 ---@return string
 function M.expand_path(path)
-    return vim.fn.fnamemodify(vim.fn.expand(path), ':p')
+    return assert(vim.fn.fnamemodify(vim.fn.expand(path), ':p'))
 end
 
 ---Use libuv to check if `path` points to an existing directory
@@ -306,13 +306,13 @@ end
 ---@param buffer number Buffer handle, or 0 for current buffer
 function M.buf_clear_undo_history(buffer)
     local old_undolevels = vim.opt.undolevels:get()
-    api.nvim_buf_set_option(buffer, 'undolevels', -1)
+    api.nvim_set_option_value('undolevels', -1, { buf = buffer })
 
     api.nvim_buf_call(buffer, function()
         vim.cmd(api.nvim_replace_termcodes('normal a <BS><ESC>', true, true, true))
     end)
 
-    api.nvim_buf_set_option(buffer, 'undolevels', old_undolevels)
+    api.nvim_set_option_value('undolevels', old_undolevels, { buf = buffer })
 end
 
 ---Retrieve the (1-based) start and end row of the current or last visual selection
@@ -349,7 +349,7 @@ end
 ---@return string
 function M.shorten_path(path, max_width)
     local sep = require('drex.utils').path_separator
-    path = vim.fn.fnamemodify(path, ':~')
+    path = assert(vim.fn.fnamemodify(path, ':~'))
 
     -- remove trailing path separator
     if #path > 1 and vim.endswith(path, sep) then
