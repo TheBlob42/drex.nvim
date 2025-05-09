@@ -157,7 +157,7 @@ function M.find_element(path, focus_drawer_window, resize_drawer_window)
 
     if resize_drawer_window then
         api.nvim_win_call(drawer_window, function()
-            local element_width = utils.get_visible_width(api.nvim_get_current_line()) + 3 -- two for indentation and one as a small padding
+            local element_width = utils.get_visible_width(api.nvim_get_current_line()) + 1 -- one as a small padding
             local drawer_width = api.nvim_win_get_width(drawer_window)
             if element_width > drawer_width then
                 M.set_width(element_width, false, true)

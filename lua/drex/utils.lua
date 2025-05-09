@@ -157,7 +157,7 @@ end
 ---@return number
 function M.get_visible_width(line)
     local indentation, icon, _, _, name = line:match(line_pattern)
-    return #indentation + #icon + 1 + #name -- one space between icon and element
+    return #indentation + api.nvim_strwidth(icon) + 1 + api.nvim_strwidth(name) -- one space between icon and element
 end
 
 -- ###############################################
